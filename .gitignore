@@ -1,0 +1,16 @@
+.agents
+TEAMMATE_GUIDE.md
+
+# Virtual Environment
+.venv/
+**/__pycache__/
+*.pyc
+
+# Local Database
+backend/database.db
+*.db
+
+# Node/React dependencies (for Day 3)
+node_modules/
+dist/
+.env
