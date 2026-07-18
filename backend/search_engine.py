@@ -5,6 +5,19 @@ import re
 import google.generativeai as genai
 from database import get_db_connection
 
+# Load environment variables from .env
+def load_dotenv():
+    env_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), ".env")
+    if os.path.exists(env_path):
+        with open(env_path, "r", encoding="utf-8") as f:
+            for line in f:
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    os.environ[key.strip()] = val.strip()
+
+load_dotenv()
+
 # Configure Gemini SDK
 api_key = os.environ.get("GEMINI_API_KEY")
 if api_key:
@@ -44,7 +57,7 @@ def get_gemini_embedding(text: str) -> list[float]:
     
     try:
         response = genai.embed_content(
-            model="models/text-embedding-004",
+            model="models/gemini-embedding-2",
             content=text,
             task_type="retrieval_document"
         )
