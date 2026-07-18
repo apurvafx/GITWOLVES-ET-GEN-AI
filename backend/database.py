@@ -67,6 +67,7 @@ def init_db():
         id TEXT PRIMARY KEY,
         doc_id TEXT NOT NULL,
         content TEXT NOT NULL,
+        embedding TEXT,
         company_id TEXT NOT NULL,
         FOREIGN KEY(doc_id) REFERENCES documents(id) ON DELETE CASCADE,
         FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
