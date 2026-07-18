@@ -1,0 +1,16 @@
+STANDARD OPERATING PROCEDURE (SOP)
+Document Code: SOP-OPS-12
+Title: Emergency Isolation & De-pressurization of High-Pressure Hydrocarbon Pumps
+Target Equipment: PUMP-101A
+
+PRE-MAINTENANCE ISOLATION CHECKLIST:
+1. Verify Permit to Work (PTW) is signed by the Shift In-Charge.
+2. Stop the driver motor. Turn off breaker at MCC Panel Room breaker #MCC-P101. Install lock and tag "DO NOT OPERATE - MAINTENANCE IN PROGRESS".
+3. Close the suction and discharge block valves manually.
+4. Locate and manually lock out electrical valve VALVE-102 (Discharge Isolation Control Valve). Apply padlocks.
+5. Open the bleed valves to drain trapped hydrocarbon fluids to the closed blowdown system (Double Block & Bleed protocol).
+6. Verify zero pressure on local gauge PG-101.
+7. Conduct gas testing to ensure LEL (Lower Explosive Limit) is 0% before opening the pump housing.
+
+REGULATORY NOTE:
+All steps in this checklist comply strictly with the safety protocols of OISD-GDN-115 for hydrocarbon fluid systems.

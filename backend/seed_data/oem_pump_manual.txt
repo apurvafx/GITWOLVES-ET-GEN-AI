@@ -1,0 +1,19 @@
+TECHNICAL SPECIFICATION SHEET: CENTRIFUGAL PROCESS PUMP
+Equipment Tag: PUMP-101A
+Manufacturer: Flowserve Corp.
+Standard: API 610 (Heavy Duty Refinery Service)
+
+OPERATING LIMITS:
+- Maximum Operating Pressure: 150 PSI (10.3 bar)
+- Maximum Fluid Temperature: 110°C
+- Bearing Housing Temperature Threshold: 85°C (185°F) - Critical Alarm Level
+- Standard Vibration Warning Limit: 2.8 mm/s velocity (RMS) - Action Required
+- Critical Vibration Trip Limit: 4.5 mm/s velocity (RMS) - Automatic Shutdown
+
+TROUBLESHOOTING GUIDE (VIBRATION & BEARING TEMPERATURE):
+1. Symptom: Bearing temperature > 80°C and rising.
+   Possible Cause: Lubricant breakdown or shaft misalignment.
+   Action: Verify oil levels. Inspect coupling alignment as detailed in Section 4.
+2. Symptom: Shaft vibration velocity > 2.8 mm/s.
+   Possible Cause: Rotor imbalance, bent shaft, or coupling misalignment.
+   Action: Stop pump, perform dial indicator check on coupling shafts.

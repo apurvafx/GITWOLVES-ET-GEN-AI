@@ -1,0 +1,15 @@
+INCIDENT FAILURE LOG
+Incident ID: INC-2026-09
+Date of Incident: June 14, 2026
+Location: Crude Distillation Unit (CDU-1)
+Equipment Affected: PUMP-101A (Refinery Feed Pump)
+
+DESCRIPTION OF EVENT:
+At 14:20 hrs, operators received a high-temperature alarm on PUMP-101A bearing housing, showing 88°C (exceeding the OEM thermal threshold limit of 85°C). Within 10 minutes, the temperature reached 92°C, accompanied by excessive pump vibration (registered at 4.2 mm/s, well past the 2.8 mm/s action limit). Before the automatic trip could trigger, a sudden failure occurred at the mechanical seal, causing a seal blowout and a localized hydrocarbon fluid leak. The emergency isolation SOP was initiated, block valves were closed, and electrical VALVE-102 was locked out. The unit was safely shut down.
+
+ROOT CAUSE ANALYSIS (RCA):
+Subsequent disassembly and inspection of the pump coupling revealed severe shaft misalignment. The coupling misalignment created cyclic fatigue loads on the rotating shaft, causing excessive vibration of 4.2 mm/s. The high vibration degraded the mechanical seal faces and generated friction heat, pushing bearing temperatures to 92°C and resulting in seal blowout. 
+
+CORRECTIVE ACTIONS:
+1. Re-align pump shaft using laser alignment system to under 0.05 mm tolerance.
+2. Update local maintenance logs for PUMP-101A to require weekly vibration scans.

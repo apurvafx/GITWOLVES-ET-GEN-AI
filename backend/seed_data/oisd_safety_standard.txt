@@ -1,0 +1,16 @@
+OIL INDUSTRY SAFETY DIRECTORATE (OISD) STANDARD
+Document Code: OISD-GDN-115
+Title: Safe Start-up and Shut-down Procedures for Petrochemical Refineries
+
+SECTION 5: HYDROCARBON PUMP ISOLATION MANDATES
+5.1 General Requirements:
+All centrifugal pumps handling flammable or toxic fluids above 60°C (including refinery unit feed pumps like PUMP-101A) must be equipped with a documented isolation checklist to prevent accidental release of hydrocarbons.
+
+5.2 Isolation Configuration:
+Double Block and Bleed (DBB) isolation systems are mandatory for lines exceeding 2 inches in diameter. The system must include two block valves with an intermediate drain/vent line to bleed trapped pressure safely.
+
+5.3 Lockout/Tagout (LOTO):
+Before line break or component replacement, electrical breakers must be locked out, and primary control valves (e.g., control valve VALVE-102) must be mechanically secured with padlocks.
+
+5.4 Compliance Audits:
+Plant managers must perform quarterly compliance audits on isolation checklists. Any SOP failing to reference DBB and LOTO protocols violates OISD-GDN-115 and represents a safety non-compliance.
