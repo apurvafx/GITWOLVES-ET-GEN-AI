@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException, Header, status
+from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile, File
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
-from database import init_db
+from database import init_db, get_db_connection
 from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest
 import auth
+import secrets
+from datetime import datetime
+import search_engine
+import graph_parser
 
 # Initialize Database on Startup
 init_db()
@@ -119,24 +123,102 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
     auth.delete_session(credentials.credentials)
     return {"message": "Logged out successfully."}
 
-# --- DOCUMENT & GRAPH API PLACEHOLDERS (For Day 2) ---
+# --- DOCUMENT & GRAPH API ROUTES ---
 
-@app.post("/api/docs/upload")
-def upload_document(admin: dict = Depends(require_admin)):
-    """Upload pipeline for documents. (Placeholder for Day 2)"""
-    return {"message": "Document upload endpoint placeholder."}
+@app.post("/api/docs/upload", status_code=status.HTTP_201_CREATED)
+async def upload_document(file: UploadFile = File(...), admin: dict = Depends(require_admin)):
+    """Uploads a technical document, chunks it, embeds it, and extracts the knowledge graph."""
+    if not file.filename.endswith(('.txt', '.md')):
+        raise HTTPException(status_code=400, detail="Only plain text (.txt) and markdown (.md) files are supported.")
+    
+    try:
+        # Read file content as text
+        contents = await file.read()
+        text_content = contents.decode('utf-8')
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Failed to read file: {e}")
+        
+    company_id = admin["company_id"]
+    doc_id = f"doc_{secrets.token_hex(4)}"
+    uploaded_at = datetime.utcnow().isoformat()
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # 1. Save document to DB
+        cursor.execute(
+            "INSERT INTO documents (id, filename, content, company_id, uploaded_at) VALUES (?, ?, ?, ?, ?)",
+            (doc_id, file.filename, text_content, company_id, uploaded_at)
+        )
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to save document metadata: {e}")
+    finally:
+        conn.close()
+        
+    try:
+        # 2. Chunk and index document embeddings (RAG Search Index)
+        search_engine.index_document(doc_id, file.filename, text_content, company_id)
+        
+        # 3. Call Gemini to extract graph nodes and edges (Knowledge Graph build)
+        graph_parser.process_document_graph(text_content, company_id)
+        
+        return {
+            "message": "Document uploaded and indexed successfully.",
+            "doc_id": doc_id,
+            "filename": file.filename
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed during AI processing (embeddings or graph): {e}")
 
 @app.get("/api/docs/list")
 def list_documents(user: dict = Depends(get_current_user)):
-    """List company-specific documents. (Placeholder for Day 2)"""
-    return {"message": "List documents endpoint placeholder."}
+    """Lists all technical manuals and reports uploaded for the user's company."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, filename, uploaded_at FROM documents WHERE company_id = ? ORDER BY uploaded_at DESC",
+        (user["company_id"],)
+    )
+    docs = cursor.fetchall()
+    conn.close()
+    return [dict(doc) for doc in docs]
 
 @app.get("/api/graph/network")
 def get_graph_network(user: dict = Depends(get_current_user)):
-    """Returns the company's knowledge graph nodes and edges. (Placeholder for Day 2)"""
-    return {"message": "Graph network endpoint placeholder."}
+    """Returns all nodes and edges in the company's knowledge graph."""
+    company_id = user["company_id"]
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    # Fetch all nodes
+    cursor.execute("SELECT id, name, type FROM graph_nodes WHERE company_id = ?", (company_id,))
+    nodes = [dict(row) for row in cursor.fetchall()]
+    
+    # Fetch all edges
+    cursor.execute("SELECT source_id, target_id, rel_type FROM graph_edges WHERE company_id = ?", (company_id,))
+    edges = [dict(row) for row in cursor.fetchall()]
+    
+    conn.close()
+    return {"nodes": nodes, "edges": edges}
 
 @app.post("/api/copilot/chat")
 def copilot_chat(payload: ChatRequest, user: dict = Depends(get_current_user)):
-    """Processes RAG & Graph queries. (Placeholder for Day 2)"""
-    return {"message": "Copilot RAG chat endpoint placeholder."}
+    """RAG Chat Copilot: searches context, calls Gemini to synthesize an answer, and maps active graph nodes."""
+    company_id = user["company_id"]
+    
+    # 1. Retrieve top 3 matching chunks using Hybrid Search (TF-IDF + Cosine similarity)
+    chunks = search_engine.hybrid_search(payload.query, company_id, top_k=3)
+    
+    if not chunks:
+        return {
+            "answer": "No documents found. Please upload manuals or operating procedures first.",
+            "citations": [],
+            "active_nodes": []
+        }
+        
+    # 2. Call Gemini to synthesize a grounded response with citations and active node mapping
+    response = search_engine.generate_rag_answer(payload.query, chunks, company_id)
+    return response

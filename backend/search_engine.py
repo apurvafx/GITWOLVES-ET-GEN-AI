@@ -207,3 +207,72 @@ def hybrid_search(query: str, company_id: str, top_k: int = 3) -> list[dict]:
     # Sort descending by combined score and slice top_k
     results.sort(key=lambda x: x["score"], reverse=True)
     return results[:top_k]
+
+def generate_rag_answer(query: str, retrieved_chunks: list[dict], company_id: str) -> dict:
+    """
+    Synthesizes an answer using the retrieved chunks and gemini-3.5-flash.
+    Returns: {"answer": str, "citations": list[str], "active_nodes": list[str]}
+    """
+    if not api_key:
+        return {
+            "answer": "Offline mode: Gemini API key is missing. Cannot synthesize RAG response.",
+            "citations": [],
+            "active_nodes": []
+        }
+    
+    # 1. Format context from chunks
+    context_blocks = []
+    citations = []
+    for chunk in retrieved_chunks:
+        filename = chunk["filename"]
+        if filename not in citations:
+            citations.append(filename)
+        context_blocks.append(f"--- Document: {filename} ---\n{chunk['content']}\n")
+    
+    context = "\n".join(context_blocks)
+    
+    # 2. System Instructions and Prompt
+    prompt = f"""
+    You are an expert industrial plant safety and operations assistant.
+    Answer the user's query using ONLY the provided document context below. 
+    If the context does not contain the answer, reply: "I cannot find sufficient information in the loaded manuals."
+    Do not invent or extrapolate safety values, limits, or parameters.
+    
+    Format your response in clean markdown. When referring to equipment tags, valves, procedures, or standards, use their exact normalized IDs in uppercase (e.g. PUMP-101A, VALVE-102, OISD-GDN-115) to help the user locate them.
+    
+    Context:
+    {context}
+    
+    User Query: {query}
+    """
+    
+    try:
+        model = genai.GenerativeModel("gemini-3.1-flash-lite")
+        response = model.generate_content(prompt)
+        answer = response.text
+        
+        # 3. Scan the SQLite database to see which node IDs appear in the answer
+        active_nodes = []
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM graph_nodes WHERE company_id = ?", (company_id,))
+        nodes = [row['id'] for row in cursor.fetchall()]
+        conn.close()
+        
+        # Match node IDs (substring match)
+        for node_id in nodes:
+            if node_id.upper() in answer.upper():
+                active_nodes.append(node_id)
+                
+        return {
+            "answer": answer,
+            "citations": citations,
+            "active_nodes": active_nodes
+        }
+    except Exception as e:
+        print(f"Error during RAG synthesis: {e}")
+        return {
+            "answer": f"Error generating answer: {e}",
+            "citations": citations,
+            "active_nodes": []
+        }

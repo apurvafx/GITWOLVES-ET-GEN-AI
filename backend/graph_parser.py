@@ -63,17 +63,19 @@ def extract_graph_from_text(text: str) -> dict:
     """
     
     try:
-        model = genai.GenerativeModel("gemini-3.5-flash")
+        model = genai.GenerativeModel("gemini-3.1-flash-lite")
         response = model.generate_content(
             prompt,
             generation_config={
-                "response_mime_type": "application/json",
-                "response_schema": KnowledgeGraphSchema
+                "response_mime_type": "application/json"
             }
         )
         # Parse and return as dict
-        parsed = KnowledgeGraphSchema.model_validate_json(response.text)
-        return parsed.model_dump()
+        try:
+            parsed = KnowledgeGraphSchema.model_validate_json(response.text)
+            return parsed.model_dump()
+        except Exception:
+            return json.loads(response.text)
     except Exception as e:
         print(f"Error calling Gemini for graph extraction: {e}")
         try:
@@ -92,9 +94,14 @@ def save_graph_to_db(graph_data: dict, company_id: str):
     
     # Save Nodes
     for node in graph_data.get("nodes", []):
-        node_id = node.get("id").strip().upper()
-        name = node.get("name")
-        node_type = node.get("type", "asset").lower()
+        if not node:
+            continue
+        node_id = node.get("id") or node.get("node_id") or ""
+        if not node_id:
+            continue
+        node_id = str(node_id).strip().upper()
+        name = node.get("name") or node_id
+        node_type = str(node.get("type") or "asset").lower()
         
         cursor.execute(
             """
@@ -106,9 +113,18 @@ def save_graph_to_db(graph_data: dict, company_id: str):
         
     # Save Edges
     for edge in graph_data.get("edges", []):
-        source_id = edge.get("source_id").strip().upper()
-        target_id = edge.get("target_id").strip().upper()
-        rel_type = edge.get("rel_type").strip().lower()
+        if not edge:
+            continue
+        source_id = edge.get("source_id") or edge.get("source") or ""
+        target_id = edge.get("target_id") or edge.get("target") or ""
+        rel_type = edge.get("rel_type") or edge.get("relation") or ""
+        
+        if not source_id or not target_id:
+            continue
+            
+        source_id = str(source_id).strip().upper()
+        target_id = str(target_id).strip().upper()
+        rel_type = str(rel_type).strip().lower()
         edge_id = f"{source_id}_{target_id}_{rel_type}"
         
         # Verify source and target nodes exist in db, insert default ones if missing

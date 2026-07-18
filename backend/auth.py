@@ -1,6 +1,7 @@
 import hashlib
 import os
 import secrets
+import sqlite3
 from datetime import datetime, timedelta
 from database import get_db_connection
 
