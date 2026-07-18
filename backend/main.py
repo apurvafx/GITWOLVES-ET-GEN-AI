@@ -222,3 +222,20 @@ def copilot_chat(payload: ChatRequest, user: dict = Depends(get_current_user)):
     # 2. Call Gemini to synthesize a grounded response with citations and active node mapping
     response = search_engine.generate_rag_answer(payload.query, chunks, company_id)
     return response
+
+@app.get("/api/docs/content/{doc_id}")
+def get_document_content(doc_id: str, user: dict = Depends(get_current_user)):
+    """Returns the full raw text content of a technical document, isolated by company."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT filename, content FROM documents WHERE id = ? AND company_id = ?",
+        (doc_id, user["company_id"])
+    )
+    row = cursor.fetchone()
+    conn.close()
+    
+    if not row:
+        raise HTTPException(status_code=404, detail="Document not found.")
+        
+    return {"filename": row["filename"], "content": row["content"]}

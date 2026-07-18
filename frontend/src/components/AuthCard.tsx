@@ -64,7 +64,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       // Keep username, clear password for quick login
       setPassword('');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to register company.');
+      const details = err.response?.data?.detail;
+      if (Array.isArray(details)) {
+        setError(details.map((d: any) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(', '));
+      } else {
+        setError(err.response?.data?.detail || 'Failed to register company.');
+      }
     } finally {
       setLoading(false);
     }

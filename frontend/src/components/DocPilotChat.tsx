@@ -7,6 +7,7 @@ interface Message {
   text: string;
   citations?: string[];
   activeNodes?: string[];
+  retrievedChunks?: { filename: string; content: string }[];
 }
 
 interface DocPilotChatProps {
@@ -15,6 +16,7 @@ interface DocPilotChatProps {
 
 export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   const [query, setQuery] = useState('');
+  const [viewingCitation, setViewingCitation] = useState<{ filename: string; content: string } | null>(null);
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'pilot',
@@ -42,7 +44,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
 
     try {
       const response = await api.post('/api/copilot/chat', { query: userQuery });
-      const { answer, citations, active_nodes } = response.data;
+      const { answer, citations, active_nodes, retrieved_chunks } = response.data;
       
       setMessages((prev) => [
         ...prev,
@@ -51,6 +53,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
           text: answer,
           citations: citations || [],
           activeNodes: active_nodes || [],
+          retrievedChunks: retrieved_chunks || [],
         },
       ]);
     } catch (err: any) {
@@ -135,14 +138,25 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
                 <div className="mt-2 flex flex-wrap gap-1.5 items-center">
                   <Bookmark size={10} className="text-amber-500" />
                   <span className="text-[10px] text-amber-600 font-semibold">Citations:</span>
-                  {msg.citations.map((cite, cIdx) => (
-                    <span
-                      key={cIdx}
-                      className="px-1.5 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 font-medium"
-                    >
-                      {cite}
-                    </span>
-                  ))}
+                  {msg.citations.map((cite, cIdx) => {
+                    const chunk = msg.retrievedChunks?.find(c => c.filename === cite);
+                    return (
+                      <button
+                        key={cIdx}
+                        type="button"
+                        onClick={() => {
+                          if (chunk) {
+                            setViewingCitation({ filename: cite, content: chunk.content });
+                          } else {
+                            setViewingCitation({ filename: cite, content: "No text snippet cached for this message." });
+                          }
+                        }}
+                        className="px-1.5 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-200 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-900/30 transition-all cursor-pointer animate-fade-in"
+                      >
+                        {cite}
+                      </button>
+                    );
+                  })}
                 </div>
               )}
             </div>
@@ -188,6 +202,33 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
           <Send size={16} />
         </button>
       </form>
+
+      {/* 4. Citation Reference Viewer Modal */}
+      {viewingCitation && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-day-surface dark:bg-night-surface border border-day-border dark:border-night-border rounded-2xl w-full max-w-lg p-6 relative max-h-[80vh] flex flex-col shadow-xl animate-zoom-in">
+            <h3 className="text-base font-bold mb-2 flex items-center gap-2">
+              <Bookmark className="text-amber-500" size={18} />
+              Retrieved Reference: <span className="text-blue-600 font-mono">{viewingCitation.filename}</span>
+            </h3>
+            <p className="text-xs text-day-textMuted dark:text-night-textMuted mb-4">
+              Below is the exact raw context snippet retrieved from this manual that was analyzed to answer your query:
+            </p>
+            <div className="flex-1 overflow-y-auto p-4 rounded-lg bg-slate-50 dark:bg-slate-900/35 border border-day-border dark:border-night-border font-mono text-xs whitespace-pre-wrap text-day-text dark:text-slate-300 leading-relaxed">
+              {viewingCitation.content}
+            </div>
+            <div className="mt-4 text-right">
+              <button
+                type="button"
+                onClick={() => setViewingCitation(null)}
+                className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95"
+              >
+                Close Reference
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

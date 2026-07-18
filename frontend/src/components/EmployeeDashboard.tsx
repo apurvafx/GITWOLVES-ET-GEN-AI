@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { ForceGraph, Node, Edge } from './ForceGraph';
+import { ForceGraph } from './ForceGraph';
+import type { Node, Edge } from './ForceGraph';
 import { DocPilotChat } from './DocPilotChat';
 import { 
   Building2, 
@@ -26,6 +27,20 @@ export const EmployeeDashboard: React.FC = () => {
   // Documents list
   const [documents, setDocuments] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState<'graph' | 'manuals'>('graph');
+  const [viewingManual, setViewingManual] = useState<{ filename: string; content: string } | null>(null);
+  const [fetchingManual, setFetchingManual] = useState(false);
+
+  const handleManualClick = async (docId: string) => {
+    setFetchingManual(true);
+    try {
+      const response = await api.get(`/api/docs/content/${docId}`);
+      setViewingManual(response.data);
+    } catch (err) {
+      console.error("Failed to load manual content:", err);
+    } finally {
+      setFetchingManual(false);
+    }
+  };
 
   // Fetch graph network and documents
   const fetchData = async () => {
@@ -110,9 +125,11 @@ export const EmployeeDashboard: React.FC = () => {
               </p>
             ) : (
               documents.map((doc) => (
-                <div
+                <button
                   key={doc.id}
-                  className="p-3 rounded-lg border border-day-border dark:border-night-border hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-default transition-all flex items-center gap-3"
+                  onClick={() => handleManualClick(doc.id)}
+                  disabled={fetchingManual}
+                  className="w-full text-left p-3 rounded-lg border border-day-border dark:border-night-border hover:bg-slate-50 dark:hover:bg-slate-900/40 cursor-pointer transition-all flex items-center gap-3 disabled:opacity-50"
                 >
                   <Bookmark size={16} className="text-amber-500 flex-shrink-0" />
                   <div className="min-w-0">
@@ -123,7 +140,7 @@ export const EmployeeDashboard: React.FC = () => {
                       {new Date(doc.uploaded_at).toLocaleDateString()}
                     </p>
                   </div>
-                </div>
+                </button>
               ))
             )}
           </div>
@@ -147,6 +164,7 @@ export const EmployeeDashboard: React.FC = () => {
                 nodes={nodes}
                 edges={edges}
                 focusedNodeId={focusedNodeId}
+                theme={theme}
                 onNodeClick={(id) => handleNodeFocus(id)}
               />
             </div>
@@ -169,6 +187,33 @@ export const EmployeeDashboard: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* 3. Manual Viewer Modal */}
+      {viewingManual && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+          <div className="bg-day-surface dark:bg-night-surface border border-day-border dark:border-night-border rounded-2xl w-full max-w-2xl p-6 relative max-h-[85vh] flex flex-col shadow-xl animate-zoom-in">
+            <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+              <FileText className="text-blue-500" size={20} />
+              Refinery Manual: <span className="text-blue-600 font-mono">{viewingManual.filename}</span>
+            </h3>
+            <p className="text-xs text-day-textMuted dark:text-night-textMuted mb-4">
+              Browsing raw document guidelines:
+            </p>
+            <div className="flex-1 overflow-y-auto p-5 rounded-lg bg-slate-50 dark:bg-slate-900/35 border border-day-border dark:border-night-border font-sans text-sm whitespace-pre-wrap text-day-text dark:text-slate-300 leading-relaxed">
+              {viewingManual.content}
+            </div>
+            <div className="mt-4 text-right">
+              <button
+                type="button"
+                onClick={() => setViewingManual(null)}
+                className="px-5 py-2.5 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95"
+              >
+                Close Document
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

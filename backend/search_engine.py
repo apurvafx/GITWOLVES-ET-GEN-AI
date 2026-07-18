@@ -267,12 +267,17 @@ def generate_rag_answer(query: str, retrieved_chunks: list[dict], company_id: st
         return {
             "answer": answer,
             "citations": citations,
-            "active_nodes": active_nodes
+            "active_nodes": active_nodes,
+            "retrieved_chunks": [{
+                "filename": chunk["filename"],
+                "content": chunk["content"]
+            } for chunk in retrieved_chunks]
         }
     except Exception as e:
         print(f"Error during RAG synthesis: {e}")
         return {
             "answer": f"Error generating answer: {e}",
             "citations": citations,
-            "active_nodes": []
+            "active_nodes": [],
+            "retrieved_chunks": []
         }

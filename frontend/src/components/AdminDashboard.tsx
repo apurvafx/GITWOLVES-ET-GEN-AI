@@ -62,7 +62,12 @@ export const AdminDashboard: React.FC = () => {
       setEmpUsername('');
       setEmpPassword('');
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Failed to create employee account.');
+      const details = err.response?.data?.detail;
+      if (Array.isArray(details)) {
+        setError(details.map((d: any) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(', '));
+      } else {
+        setError(err.response?.data?.detail || 'Failed to create employee account.');
+      }
     } finally {
       setLoading(false);
     }
