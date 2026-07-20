@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
-import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
+import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity, Mic, MicOff, Volume2, VolumeX, Download, FileText } from 'lucide-react';
 
 interface Message {
   sender: 'user' | 'pilot';
@@ -26,7 +26,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Voice Controls (Step 3: Speech-to-Text & Text-to-Speech)
+  // Voice Controls
   const [isListening, setIsListening] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
@@ -37,7 +37,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
-  // Initialize Web Speech API for voice dictation
+  // Web Speech API Voice Dictation
   useEffect(() => {
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
     if (SpeechRecognition) {
@@ -114,6 +114,54 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
     window.speechSynthesis.speak(utterance);
   };
 
+  // Step 4: 1-Click Shift Handover Report Exporter
+  const handleExportShiftReport = () => {
+    if (messages.length <= 1) {
+      alert("No operational troubleshooting logs to export for this shift yet. Ask DocPilot a query first!");
+      return;
+    }
+
+    const timestamp = new Date().toLocaleString();
+    let report = `=================================================================\n`;
+    report += `       VIGILOPS REFINERY - SHIFT HANDOVER AUDIT REPORT           \n`;
+    report += `=================================================================\n`;
+    report += ` Generated Date: ${timestamp}\n`;
+    report += ` Security Level: CONFIDENTIAL OPERATIONAL AUDIT LOG\n`;
+    report += ` System Mode:    768-DIM RAG GROUNDED KNOWLEDGE GRAPH\n`;
+    report += `=================================================================\n\n`;
+
+    report += `1. SHIFT OPERATIONAL TROUBLESHOOTING LOG:\n`;
+    report += `-----------------------------------------------------------------\n`;
+
+    messages.forEach((msg, i) => {
+      if (msg.sender === 'user') {
+        report += `\n[OPERATOR QUERY #${Math.ceil(i / 2)}]\n${msg.text}\n`;
+      } else if (i > 0) {
+        report += `\n[DOCPILOT GUIDELINE RESPONSE]\n${msg.text.replace(/\*\*/g, '')}\n`;
+        if (msg.activeNodes && msg.activeNodes.length > 0) {
+          report += `Affected Equipment Nodes: ${msg.activeNodes.join(', ')}\n`;
+        }
+        if (msg.citations && msg.citations.length > 0) {
+          report += `Grounded Manual Citations: ${msg.citations.join(', ')}\n`;
+        }
+      }
+    });
+
+    report += `\n\n=================================================================\n`;
+    report += ` END OF REPORT - OFFICIAL VIGILOPS SHIFT HANDOVER DOCUMENT\n`;
+    report += `=================================================================\n`;
+
+    const blob = new Blob([report], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `VigilOps_Shift_Handover_Report_${Date.now()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
@@ -172,11 +220,20 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
           <div>
             <h2 className="font-bold text-xs font-display text-stone-950">DocPilot Assistant</h2>
             <p className="text-[9px] font-mono text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Hands-Free Voice Online
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> System Online
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-mono font-bold text-stone-500">Voice & RAG Grounded</span>
+
+        {/* Step 4: Export Shift Handover Report Button */}
+        <button
+          type="button"
+          onClick={handleExportShiftReport}
+          className="px-3.5 py-1.5 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-slate-950 text-lime-400 hover:bg-slate-800 transition-all flex items-center gap-1.5 active:scale-95 shadow-md cursor-pointer"
+          title="Export Shift Handover Audit Report"
+        >
+          <Download size={12} /> Export Shift Report
+        </button>
       </div>
 
       {/* 2. Messages Box */}
