@@ -6,7 +6,7 @@ interface AuthContextType {
   companyId: string | null;
   username: string | null;
   companyName: string | null;
-  theme: 'light' | 'dark';
+  theme: 'light';
   login: (token: string, role: 'admin' | 'employee', companyId: string, username: string, companyName: string) => void;
   logout: () => void;
   toggleTheme: () => void;
@@ -22,22 +22,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [companyId, setCompanyId] = useState<string | null>(localStorage.getItem('vigilops_company_id'));
   const [username, setUsername] = useState<string | null>(localStorage.getItem('vigilops_username'));
   const [companyName, setCompanyName] = useState<string | null>(localStorage.getItem('vigilops_company_name'));
-  const [theme, setTheme] = useState<'light' | 'dark'>(
-    (localStorage.getItem('vigilops_theme') as 'light' | 'dark') || 'dark'
-  );
+  const theme: 'light' = 'light';
 
   useEffect(() => {
-    // Sync theme class with HTML element
+    // Lock HTML theme permanently to light studio mode
     const root = window.document.documentElement;
-    if (theme === 'dark') {
-      root.classList.add('dark');
-      root.style.backgroundColor = '#06080e'; // Match night mode base
-    } else {
-      root.classList.remove('dark');
-      root.style.backgroundColor = '#f8fafc'; // Match day mode base
-    }
-    localStorage.setItem('vigilops_theme', theme);
-  }, [theme]);
+    root.classList.remove('dark');
+    root.style.backgroundColor = '#e8e8e5';
+    localStorage.setItem('vigilops_theme', 'light');
+  }, []);
 
   const login = (
     newToken: string,
@@ -74,7 +67,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const toggleTheme = () => {
-    setTheme((prev) => (prev === 'dark' ? 'light' : 'dark'));
+    // Light theme locked permanently by user choice
   };
 
   return (

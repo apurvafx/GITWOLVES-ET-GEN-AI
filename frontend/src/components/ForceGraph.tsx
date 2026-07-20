@@ -17,7 +17,7 @@ interface ForceGraphProps {
   nodes: Node[];
   edges: Edge[];
   focusedNodeId: string | null;
-  theme: 'light' | 'dark';
+  theme?: 'light' | 'dark';
   onNodeClick?: (nodeId: string) => void;
 }
 
@@ -25,12 +25,12 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
   nodes,
   edges,
   focusedNodeId,
-  theme,
   onNodeClick,
 }) => {
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
   const [dimensions, setDimensions] = useState({ width: 400, height: 500 });
+  const [hoveredNode, setHoveredNode] = useState<any | null>(null);
 
   // Handle responsive resizing
   useEffect(() => {
@@ -47,7 +47,7 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
     return () => resizeObserver.disconnect();
   }, []);
 
-  // Format data for react-force-graph-2d (d3 links require source/target keys)
+  // Format data for react-force-graph-2d
   const data = useMemo(() => {
     return {
       nodes: nodes.map((n) => ({ id: n.id, name: n.name, type: n.type })),
@@ -63,73 +63,101 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
   useEffect(() => {
     if (focusedNodeId && fgRef.current) {
       const node = data.nodes.find((n) => n.id === focusedNodeId) as any;
-      if (node) {
-        // Zoom & center animation
+      if (node && typeof node.x === 'number' && !isNaN(node.x) && typeof node.y === 'number' && !isNaN(node.y)) {
         fgRef.current.centerAt(node.x, node.y, 800);
-        fgRef.current.zoom(2.0, 800);
+        fgRef.current.zoom(2.5, 800);
       }
     }
   }, [focusedNodeId, data]);
 
-  // Custom node drawer for clean professional topological circles and labels
+  // Rock-Solid Custom Node Drawer with Finite Safety Validation
   const drawNode = (node: any, ctx: CanvasRenderingContext2D, globalScale: number) => {
+    // 0. Absolute NaN / Finite Coordinate Safety Check to prevent canvas crash
+    if (
+      typeof node.x !== 'number' ||
+      isNaN(node.x) ||
+      !isFinite(node.x) ||
+      typeof node.y !== 'number' ||
+      isNaN(node.y) ||
+      !isFinite(node.y)
+    ) {
+      return;
+    }
+
     const label = node.name || node.id;
-    const fontSize = 10 / globalScale;
-    ctx.font = `bold ${fontSize}px system-ui`;
+    const fontSize = Math.max(10 / globalScale, 3);
+    ctx.font = `700 ${fontSize}px "Inter Tight", "Inter", sans-serif`;
 
-    // Assign colors based on node category
-    let color = '#38bdf8'; // Blue Default
-    if (node.type === 'procedure') color = '#34d399'; // Emerald
-    else if (node.type === 'regulation') color = '#c084fc'; // Purple
-    else if (node.type === 'incident') color = '#f87171'; // Red
-    else if (node.type === 'document') color = '#fbbf24'; // Amber
+    // Category Colors
+    let colorCore = '#38bdf8'; // Assets (Cyan Blue)
+    let colorGlow = 'rgba(56, 189, 248, 0.35)';
 
-    const r = 6; // node radius
+    if (node.type === 'procedure') {
+      colorCore = '#34d399'; // Procedures (Emerald)
+      colorGlow = 'rgba(52, 211, 153, 0.35)';
+    } else if (node.type === 'regulation') {
+      colorCore = '#c084fc'; // Regulations (Violet)
+      colorGlow = 'rgba(192, 132, 252, 0.35)';
+    } else if (node.type === 'incident') {
+      colorCore = '#f87171'; // Incidents (Coral Red)
+      colorGlow = 'rgba(248, 113, 113, 0.35)';
+    } else if (node.type === 'document') {
+      colorCore = '#fbbf24'; // Documents (Amber)
+      colorGlow = 'rgba(251, 191, 36, 0.35)';
+    }
 
-    // Highlight focus selection halo
-    if (node.id === focusedNodeId) {
+    const r = 8;
+    const isFocused = node.id === focusedNodeId;
+    const isHovered = hoveredNode && hoveredNode.id === node.id;
+
+    // 1. Outer Glow Aura
+    ctx.beginPath();
+    ctx.arc(node.x, node.y, r + (isFocused || isHovered ? 8 : 4), 0, 2 * Math.PI, false);
+    ctx.fillStyle = isFocused ? 'rgba(196, 241, 36, 0.4)' : colorGlow;
+    ctx.fill();
+
+    // 2. Focused Ring
+    if (isFocused || isHovered) {
       ctx.beginPath();
-      ctx.arc(node.x, node.y, r + 4, 0, 2 * Math.PI, false);
-      ctx.fillStyle = 'rgba(251, 191, 36, 0.15)'; // Gold shadow
-      ctx.fill();
-      ctx.strokeStyle = '#fbbf24'; // Gold border
-      ctx.lineWidth = 1.5;
+      ctx.arc(node.x, node.y, r + 10, 0, 2 * Math.PI, false);
+      ctx.strokeStyle = isFocused ? '#c4f124' : colorCore;
+      ctx.lineWidth = 1.5 / globalScale;
       ctx.stroke();
     }
 
-    // Draw central node dot
+    // 3. Central Node Circle
     ctx.beginPath();
     ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
-    ctx.fillStyle = color;
+    ctx.fillStyle = colorCore;
     ctx.fill();
-    ctx.strokeStyle = theme === 'dark' ? '#06080e' : '#ffffff';
-    ctx.lineWidth = 1;
+    ctx.strokeStyle = isFocused ? '#c4f124' : '#050508';
+    ctx.lineWidth = 1.5;
     ctx.stroke();
 
-    // Draw high-contrast text labels
+    // 4. Clean Label Typography
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
 
-    ctx.strokeStyle = theme === 'dark' ? '#06080e' : '#ffffff';
-    ctx.lineWidth = 3 / globalScale;
-    ctx.strokeText(label, node.x, node.y + r + 8);
+    ctx.strokeStyle = '#050508';
+    ctx.lineWidth = 4 / globalScale;
+    ctx.strokeText(label, node.x, node.y + r + 10);
 
-    ctx.fillStyle = theme === 'dark' ? '#e2e8f0' : '#0f172a';
-    ctx.fillText(label, node.x, node.y + r + 8);
+    ctx.fillStyle = isFocused ? '#c4f124' : '#f3f4f6';
+    ctx.fillText(label, node.x, node.y + r + 10);
   };
 
-  // Tune D3 physics forces for optimal node repulsion and spacious layout
+  // D3 Physics Forces
   useEffect(() => {
     if (fgRef.current) {
-      fgRef.current.d3Force('charge')?.strength(-160);
-      fgRef.current.d3Force('link')?.distance(65);
+      fgRef.current.d3Force('charge')?.strength(-280);
+      fgRef.current.d3Force('link')?.distance(75);
     }
   }, [data]);
 
   return (
     <div
       ref={containerRef}
-      className="relative w-full h-full bg-slate-50 dark:bg-slate-950/20 border border-day-border dark:border-night-border rounded-2xl overflow-hidden"
+      className="relative w-full h-full bg-[#080812] border border-stone-800 rounded-2xl overflow-hidden shadow-2xl"
     >
       <ForceGraph2D
         ref={fgRef}
@@ -138,21 +166,48 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
         height={dimensions.height}
         nodeCanvasObject={drawNode}
         nodePointerAreaPaint={(node: any, color, ctx) => {
-          ctx.beginPath();
-          ctx.arc(node.x, node.y, 10, 0, 2 * Math.PI, false);
-          ctx.fillStyle = color;
-          ctx.fill();
+          if (typeof node.x === 'number' && !isNaN(node.x) && typeof node.y === 'number' && !isNaN(node.y)) {
+            ctx.beginPath();
+            ctx.arc(node.x, node.y, 14, 0, 2 * Math.PI, false);
+            ctx.fillStyle = color;
+            ctx.fill();
+          }
         }}
         onNodeClick={(node: any) => {
-          if (onNodeClick) onNodeClick(node.id);
+          if (onNodeClick && node) onNodeClick(node.id);
         }}
-        linkColor={() => (theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)')}
-        linkWidth={1.2}
+        onNodeHover={(node: any) => {
+          setHoveredNode(node || null);
+        }}
+        // 70% Link Opacity & Clean Cyber Laser Lines
+        linkColor={() => 'rgba(148, 163, 184, 0.70)'}
+        linkWidth={2}
+        // Animated Laser Data Packets
+        linkDirectionalParticles={3}
+        linkDirectionalParticleSpeed={0.006}
+        linkDirectionalParticleWidth={3}
+        linkDirectionalParticleColor={() => '#38bdf8'}
+        // Directional Arrows
+        linkDirectionalArrowLength={4}
+        linkDirectionalArrowRelPos={0.95}
+        linkDirectionalArrowColor={() => 'rgba(56, 189, 248, 0.75)'}
         d3AlphaDecay={0.02}
-        d3VelocityDecay={0.3}
-        warmupTicks={50}
-        cooldownTicks={150}
+        d3VelocityDecay={0.25}
+        warmupTicks={60}
+        cooldownTicks={180}
       />
+
+      {/* Floating Hover Inspector Card */}
+      {hoveredNode && (
+        <div className="absolute top-4 right-4 p-4 rounded-2xl bg-[#0e101f]/90 backdrop-blur-xl border border-sky-500/40 text-left space-y-1 shadow-2xl pointer-events-none animate-in fade-in zoom-in-95 duration-150 font-sans">
+          <p className="text-xs font-mono font-bold text-sky-400 uppercase tracking-wider flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-sky-400 animate-ping" /> {hoveredNode.name || hoveredNode.id}
+          </p>
+          <p className="text-[11px] text-stone-300 font-mono">
+            Type: <span className="text-lime-400 font-bold uppercase">{hoveredNode.type || 'Asset'}</span>
+          </p>
+        </div>
+      )}
     </div>
   );
 };

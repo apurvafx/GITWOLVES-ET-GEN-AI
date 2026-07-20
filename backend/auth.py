@@ -81,6 +81,31 @@ def create_employee(employee_username: str, employee_password: str, company_id: 
     finally:
         conn.close()
 
+def list_company_employees(company_id: str) -> list[dict]:
+    """Retrieves all employee accounts for a specific company."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, username, role, company_id FROM users WHERE company_id = ? AND role = 'employee'",
+        (company_id,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(row) for row in rows]
+
+def delete_company_employee(employee_id: str, company_id: str) -> bool:
+    """Deletes an employee account belonging to the specified company."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "DELETE FROM users WHERE id = ? AND company_id = ? AND role = 'employee'",
+        (employee_id, company_id)
+    )
+    affected = cursor.rowcount
+    conn.commit()
+    conn.close()
+    return affected > 0
+
 def authenticate_user(username: str, password: str) -> dict | None:
     """
     Validates username and password.

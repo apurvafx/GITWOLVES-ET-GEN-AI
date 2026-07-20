@@ -1,15 +1,18 @@
 import React, { useState } from 'react';
+import { motion } from 'framer-motion';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Key, Building2, User, Eye, EyeOff } from 'lucide-react';
+import { Shield, Key, Building2, User, Eye, EyeOff, Play, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface AuthCardProps {
   onSuccess: () => void;
+  initialTab?: 'login' | 'register';
+  selectedPlan?: string;
 }
 
-export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
+export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess, initialTab = 'login', selectedPlan = 'pro' }) => {
   const { login } = useAuth();
-  const [activeTab, setActiveTab] = useState<'login' | 'register'>('login');
+  const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -19,6 +22,31 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [companyName, setCompanyName] = useState('');
+
+  // 1-Click Instant Demo Login
+  const handleQuickDemoLogin = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.post('/api/auth/login', {
+        username: 'admin_refinery',
+        password: 'SafePassword123!',
+      });
+      const { access_token, user } = response.data;
+      login(
+        access_token,
+        user.role,
+        user.company_id,
+        user.username,
+        'Test Refinery Corp'
+      );
+      onSuccess();
+    } catch (err: any) {
+      setError('Demo login failed. Ensure backend server is running.');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,7 +59,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       });
       const { access_token, user } = response.data;
       
-      // Use company_id as company name for visual representation
       login(
         access_token,
         user.role,
@@ -61,7 +88,6 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
       });
       setSuccessMsg(`Company '${companyName}' registered successfully! Please log in.`);
       setActiveTab('login');
-      // Keep username, clear password for quick login
       setPassword('');
     } catch (err: any) {
       const details = err.response?.data?.detail;
@@ -76,9 +102,30 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto overflow-hidden rounded-2xl border border-day-border dark:border-night-border bg-day-surface dark:bg-night-surface shadow-lg">
-      {/* Tabs Header */}
-      <div className="flex border-b border-day-border dark:border-night-border">
+    <motion.div
+      initial={{ opacity: 0, scale: 0.95 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.95 }}
+      className="w-full max-w-md mx-auto overflow-hidden rounded-3xl border border-stone-300 bg-[#f0f0ed] backdrop-blur-2xl shadow-2xl"
+    >
+      {/* 1-Click Instant Demo Banner */}
+      <div className="p-4 bg-slate-950 text-lime-400 flex items-center justify-between shadow-inner">
+        <div className="flex items-center gap-2 text-xs font-bold font-mono">
+          <Sparkles size={16} className="animate-pulse" />
+          <span>INSTANT DEMO ACCESS</span>
+        </div>
+        <button
+          type="button"
+          onClick={handleQuickDemoLogin}
+          disabled={loading}
+          className="px-4 py-2 rounded-full bg-lime-400/20 text-lime-300 text-xs font-black font-mono transition-all flex items-center gap-1.5 active:scale-95 disabled:opacity-50 shadow-sm"
+        >
+          <Play size={12} /> Launch Refinery
+        </button>
+      </div>
+
+      {/* Studio Style Pill Tabs Switcher */}
+      <div className="p-2 m-5 bg-stone-200 rounded-full border border-stone-300 flex">
         <button
           type="button"
           onClick={() => {
@@ -86,10 +133,10 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
             setError(null);
             setSuccessMsg(null);
           }}
-          className={`flex-1 py-4 text-center font-medium transition-all ${
+          className={`flex-1 py-3 rounded-full text-xs font-mono font-black uppercase tracking-wider transition-all ${
             activeTab === 'login'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-slate-50/50 dark:bg-slate-900/20'
-              : 'text-day-textMuted dark:text-night-textMuted hover:text-day-text dark:hover:text-night-text'
+              ? 'bg-slate-950 text-lime-400 shadow-md'
+              : 'text-stone-600 hover:text-stone-900'
           }`}
         >
           Client Sign In
@@ -101,51 +148,50 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
             setError(null);
             setSuccessMsg(null);
           }}
-          className={`flex-1 py-4 text-center font-medium transition-all ${
+          className={`flex-1 py-3 rounded-full text-xs font-mono font-black uppercase tracking-wider transition-all ${
             activeTab === 'register'
-              ? 'text-blue-600 border-b-2 border-blue-600 bg-slate-50/50 dark:bg-slate-900/20'
-              : 'text-day-textMuted dark:text-night-textMuted hover:text-day-text dark:hover:text-night-text'
+              ? 'bg-slate-950 text-lime-400 shadow-md'
+              : 'text-stone-600 hover:text-stone-900'
           }`}
         >
-          Admin Registration
+          Admin Register
         </button>
       </div>
 
-      <div className="p-8">
-        <div className="text-center mb-6">
-          <div className="inline-flex p-3 rounded-full bg-blue-100 dark:bg-blue-900/20 text-blue-600 mb-3">
-            {activeTab === 'login' ? <Key size={24} /> : <Building2 size={24} />}
-          </div>
-          <h2 className="text-2xl font-bold text-day-text dark:text-night-text">
-            {activeTab === 'login' ? 'Welcome Back' : 'Create Company Workspace'}
+      <div className="px-8 pb-8 space-y-5">
+        <div className="text-center space-y-1">
+          <h2 className="text-2xl font-black font-display text-stone-950">
+            {activeTab === 'login' ? 'Access Co-Pilot' : 'Register Refinery Workspace'}
           </h2>
-          <p className="text-sm text-day-textMuted dark:text-night-textMuted mt-1">
+          <p className="text-xs text-stone-600 font-light">
             {activeTab === 'login'
-              ? 'Access your isolated operations co-pilot'
-              : 'Register your refinery profile and admin credentials'}
+              ? 'Enter your isolated operations credentials'
+              : 'Setup isolated company workspace & admin profile'}
           </p>
         </div>
 
         {error && (
-          <div className="p-3 mb-4 rounded-lg bg-red-100 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-sm border border-red-200 dark:border-red-900/30">
-            {error}
+          <div className="p-3.5 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 text-xs flex items-center gap-2 font-mono">
+            <AlertTriangle size={16} />
+            <span>{error}</span>
           </div>
         )}
 
         {successMsg && (
-          <div className="p-3 mb-4 rounded-lg bg-emerald-100 dark:bg-emerald-950/20 text-emerald-600 dark:text-emerald-400 text-sm border border-emerald-200 dark:border-emerald-900/30">
-            {successMsg}
+          <div className="p-3.5 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs flex items-center gap-2 font-mono">
+            <CheckCircle2 size={16} />
+            <span>{successMsg}</span>
           </div>
         )}
 
         <form onSubmit={activeTab === 'login' ? handleLogin : handleRegister} className="space-y-4">
           {activeTab === 'register' && (
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-day-textMuted dark:text-night-textMuted mb-2">
-                Company Name
+              <label className="block text-xs font-mono font-bold uppercase tracking-wider text-stone-600 mb-2">
+                Company Workspace Name
               </label>
               <div className="relative">
-                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-day-textMuted dark:text-night-textMuted">
+                <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
                   <Building2 size={18} />
                 </span>
                 <input
@@ -154,18 +200,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                   placeholder="e.g. Reliance Refinery"
                   value={companyName}
                   onChange={(e) => setCompanyName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-day-border dark:border-night-border bg-transparent text-day-text dark:text-night-text focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-stone-300 bg-white text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono"
                 />
               </div>
             </div>
           )}
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-day-textMuted dark:text-night-textMuted mb-2">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-stone-600 mb-2">
               Username
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-day-textMuted dark:text-night-textMuted">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
                 <User size={18} />
               </span>
               <input
@@ -174,17 +220,17 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 placeholder={activeTab === 'login' ? 'e.g. r.sharma.ops' : 'e.g. admin.ops'}
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-day-border dark:border-night-border bg-transparent text-day-text dark:text-night-text focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-10 pr-4 py-3.5 rounded-2xl border border-stone-300 bg-white text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-day-textMuted dark:text-night-textMuted mb-2">
+            <label className="block text-xs font-mono font-bold uppercase tracking-wider text-stone-600 mb-2">
               Password
             </label>
             <div className="relative">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-day-textMuted dark:text-night-textMuted">
+              <span className="absolute inset-y-0 left-0 pl-3.5 flex items-center text-stone-400">
                 <Shield size={18} />
               </span>
               <input
@@ -193,12 +239,12 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
                 placeholder="••••••••"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-day-border dark:border-night-border bg-transparent text-day-text dark:text-night-text focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                className="w-full pl-10 pr-10 py-3.5 rounded-2xl border border-stone-300 bg-white text-stone-900 text-xs focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-day-textMuted dark:text-night-textMuted hover:text-day-text dark:hover:text-night-text"
+                className="absolute inset-y-0 right-0 pr-3.5 flex items-center text-stone-400 hover:text-stone-600"
               >
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
@@ -208,18 +254,18 @@ export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess }) => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full mt-2 py-3 px-4 rounded-lg bg-cobalt-teal text-white font-medium hover:opacity-90 active:scale-[0.99] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-4 sm:py-5 rounded-full bg-slate-950 hover:bg-slate-800 text-lime-400 font-mono text-xs uppercase tracking-widest font-black shadow-xl transition-all active:scale-95 disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
           >
             {loading ? (
-              <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></span>
             ) : activeTab === 'login' ? (
-              'Access Co-Pilot'
+              'Access Operations Co-Pilot'
             ) : (
-              'Create Workspace'
+              'Create Refinery Workspace'
             )}
           </button>
         </form>
       </div>
-    </div>
+    </motion.div>
   );
 };

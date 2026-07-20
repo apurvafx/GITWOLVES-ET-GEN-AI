@@ -4,15 +4,18 @@ import { LandingPage } from './components/LandingPage';
 import { AuthCard } from './components/AuthCard';
 import { AdminDashboard } from './components/AdminDashboard';
 import { EmployeeDashboard } from './components/EmployeeDashboard';
+import { ComingSoonModal } from './components/ComingSoonModal';
 import { X } from 'lucide-react';
 
 function MainAppContent() {
   const { token, role } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showComingSoon, setShowComingSoon] = useState(false);
+  const [selectedPlanTier, setSelectedPlanTier] = useState('pro');
 
-  // Auto-fill demo account details
-  const handleDemoClick = () => {
-    setShowAuthModal(true);
+  const handleSelectPricingPlan = (tier: string) => {
+    setSelectedPlanTier(tier);
+    setShowComingSoon(true);
   };
 
   // If user is authenticated, render role-specific dashboard
@@ -29,7 +32,8 @@ function MainAppContent() {
     <>
       <LandingPage
         onLoginClick={() => setShowAuthModal(true)}
-        onDemoClick={handleDemoClick}
+        onDemoClick={() => setShowAuthModal(true)}
+        onSelectPricingPlan={handleSelectPricingPlan}
       />
 
       {/* Auth Portal Overlay Modal */}
@@ -46,6 +50,18 @@ function MainAppContent() {
             <AuthCard onSuccess={() => setShowAuthModal(false)} />
           </div>
         </div>
+      )}
+
+      {/* Coming Soon Waitlist Modal */}
+      {showComingSoon && (
+        <ComingSoonModal
+          planTier={selectedPlanTier}
+          onClose={() => setShowComingSoon(false)}
+          onLaunchDemo={() => {
+            setShowComingSoon(false);
+            setShowAuthModal(true);
+          }}
+        />
       )}
     </>
   );

@@ -42,10 +42,11 @@ def run_graph_evaluation():
     extracted_nodes = {n["id"].strip().upper(): n["type"].lower() for n in extracted_graph.get("nodes", [])}
     extracted_edges = []
     for e in extracted_graph.get("edges", []):
-        source = e["source_id"].strip().upper()
-        target = e["target_id"].strip().upper()
-        rel = e["rel_type"].strip().lower()
-        extracted_edges.append((source, target, rel))
+        source = e.get("source_id", e.get("source", "")).strip().upper()
+        target = e.get("target_id", e.get("target", "")).strip().upper()
+        rel = e.get("rel_type", e.get("label", "relates")).strip().lower()
+        if source and target:
+            extracted_edges.append((source, target, rel))
         
     # evaluate nodes (precision & recall)
     gt_nodes_set = set(GROUND_TRUTH_NODES.keys())

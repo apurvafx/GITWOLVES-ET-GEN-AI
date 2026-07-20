@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
-import { Send, Bot, User, Bookmark, AlertTriangle } from 'lucide-react';
+import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity } from 'lucide-react';
 
 interface Message {
   sender: 'user' | 'pilot';
@@ -27,7 +27,6 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   const [error, setError] = useState<string | null>(null);
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
-  // Auto-scroll to bottom of conversation
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
@@ -64,26 +63,32 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
     }
   };
 
-  // Helper to parse double asterisks for bold rendering in UI
   const renderMessageText = (text: string) => {
     const parts = text.split(/(\*\*.*?\*\*)/g);
     return parts.map((part, index) => {
       if (part.startsWith('**') && part.endsWith('**')) {
-        return <strong key={index} className="font-bold text-day-text dark:text-white">{part.slice(2, -2)}</strong>;
+        return <strong key={index} className="font-bold text-stone-950">{part.slice(2, -2)}</strong>;
       }
       return part;
     });
   };
 
   return (
-    <div className="flex flex-col h-full max-h-full overflow-hidden bg-day-surface dark:bg-night-surface border border-day-border dark:border-night-border rounded-2xl shadow-sm">
+    <div className="flex flex-col h-full max-h-full overflow-hidden bg-[#f0f0ed] border border-stone-300 rounded-3xl shadow-xl">
       {/* 1. Panel Header */}
-      <div className="flex-shrink-0 flex items-center gap-2 px-6 py-4 border-b border-day-border dark:border-night-border bg-slate-50 dark:bg-slate-900/10">
-        <Bot className="text-blue-600 animate-pulse" size={20} />
-        <div>
-          <h2 className="font-bold text-sm">DocPilot Assistant</h2>
-          <p className="text-[10px] text-emerald-500 font-semibold tracking-wider uppercase">System Online</p>
+      <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-stone-300">
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 rounded-2xl bg-slate-900 text-lime-400">
+            <Bot size={18} />
+          </div>
+          <div>
+            <h2 className="font-bold text-xs font-display text-stone-950">DocPilot Assistant</h2>
+            <p className="text-[9px] font-mono text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> System Online
+            </p>
+          </div>
         </div>
+        <span className="text-[10px] font-mono font-bold text-stone-500">768-Dim RAG Grounded</span>
       </div>
 
       {/* 2. Messages Box */}
@@ -91,41 +96,42 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`flex gap-3 max-w-[85%] ${
+            className={`flex gap-3 max-w-[88%] ${
               msg.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
             }`}
           >
             {/* Avatar */}
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs ${
-                msg.sender === 'user' ? 'bg-teal-600' : 'bg-blue-600'
+              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-md ${
+                msg.sender === 'user' 
+                  ? 'bg-stone-900 text-lime-400 font-mono' 
+                  : 'bg-slate-950 text-lime-400'
               }`}
             >
               {msg.sender === 'user' ? <User size={14} /> : <Bot size={14} />}
             </div>
 
-            {/* Bubble */}
+            {/* Message Bubble */}
             <div
-              className={`p-4 rounded-2xl text-sm leading-relaxed border ${
+              className={`p-4 rounded-3xl text-xs leading-relaxed border ${
                 msg.sender === 'user'
-                  ? 'bg-blue-50/50 dark:bg-blue-950/15 border-blue-100 dark:border-blue-950/20 text-day-text dark:text-slate-200'
-                  : 'bg-slate-50/50 dark:bg-slate-900/20 border-day-border dark:border-night-border text-day-textMuted dark:text-night-textMuted'
+                  ? 'bg-stone-300 border-stone-400 text-stone-950'
+                  : 'bg-white border-stone-300 text-stone-800'
               }`}
             >
-              {/* Message text */}
               <div className="whitespace-pre-wrap">{renderMessageText(msg.text)}</div>
 
               {/* Active Graph Nodes tags */}
               {msg.activeNodes && msg.activeNodes.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-day-border dark:border-night-border pt-2">
-                  <span className="text-[10px] uppercase font-bold text-day-textMuted dark:text-night-textMuted flex items-center gap-1">
-                    🔍 Mentioned:
+                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-stone-200 pt-2.5">
+                  <span className="text-[10px] font-mono font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
+                    Mentioned:
                   </span>
                   {msg.activeNodes.map((node) => (
                     <button
                       key={node}
                       onClick={() => onNodeFocus(node)}
-                      className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-blue-100 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-900/30 hover:bg-blue-200 dark:hover:bg-blue-900/40 transition-all"
+                      className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-stone-300 text-stone-950 border border-stone-400 hover:opacity-80 transition-all cursor-pointer"
                     >
                       {node}
                     </button>
@@ -135,9 +141,9 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
 
               {/* Citations list */}
               {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-2 flex flex-wrap gap-1.5 items-center">
-                  <Bookmark size={10} className="text-amber-500" />
-                  <span className="text-[10px] text-amber-600 font-semibold">Citations:</span>
+                <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
+                  <Bookmark size={12} className="text-stone-950" />
+                  <span className="text-[10px] font-mono text-stone-900 font-bold uppercase tracking-wider">Citations:</span>
                   {msg.citations.map((cite, cIdx) => {
                     const chunk = msg.retrievedChunks?.find(c => c.filename === cite);
                     return (
@@ -151,7 +157,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
                             setViewingCitation({ filename: cite, content: "No text snippet cached for this message." });
                           }
                         }}
-                        className="px-1.5 py-0.5 rounded text-[10px] bg-amber-100 dark:bg-amber-950/20 text-amber-600 dark:text-amber-400 font-medium hover:bg-amber-200 dark:hover:bg-amber-900/40 border border-amber-200 dark:border-amber-900/30 transition-all cursor-pointer animate-fade-in"
+                        className="px-3 py-1 rounded-full text-[10px] font-mono bg-stone-300 text-stone-950 font-bold border border-stone-400 hover:opacity-80 transition-all cursor-pointer"
                       >
                         {cite}
                       </button>
@@ -165,17 +171,17 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
 
         {loading && (
           <div className="flex gap-3 mr-auto max-w-[85%]">
-            <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white flex-shrink-0">
+            <div className="w-8 h-8 rounded-full bg-slate-950 flex items-center justify-center text-lime-400 flex-shrink-0">
               <Bot size={14} className="animate-spin" />
             </div>
-            <div className="p-4 rounded-2xl bg-slate-50/50 dark:bg-slate-900/20 border border-day-border dark:border-night-border text-xs italic text-day-textMuted dark:text-night-textMuted">
-              DocPilot is retrieving context and generating answer...
+            <div className="p-4 rounded-3xl bg-white border border-stone-300 text-xs italic text-stone-500">
+              DocPilot is retrieving context & generating grounded answer...
             </div>
           </div>
         )}
 
         {error && (
-          <div className="p-3 rounded-lg bg-red-100 dark:bg-red-950/20 text-red-600 dark:text-red-400 text-xs border border-red-200 dark:border-red-900/30 flex items-center gap-2">
+          <div className="p-3.5 rounded-2xl bg-red-500/10 text-red-600 text-xs border border-red-500/30 flex items-center gap-2">
             <AlertTriangle size={14} />
             <span>{error}</span>
           </div>
@@ -185,43 +191,43 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
       </div>
 
       {/* 3. Input Form */}
-      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-day-border dark:border-night-border bg-slate-50 dark:bg-slate-900/10 flex gap-2">
+      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-stone-300 bg-[#f0f0ed] flex gap-2.5">
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask DocPilot anything about manuals or safety..."
+          placeholder="Ask DocPilot anything about manuals, safety limits, or SOPs..."
           disabled={loading}
-          className="flex-1 px-4 py-2.5 rounded-lg border border-day-border dark:border-night-border bg-transparent text-sm text-day-text dark:text-night-text focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 disabled:opacity-50"
+          className="flex-1 px-5 py-3 rounded-full border border-stone-300 bg-white text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono disabled:opacity-50"
         />
         <button
           type="submit"
           disabled={loading || !query.trim()}
-          className="p-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all disabled:opacity-50 disabled:hover:bg-blue-600 flex items-center justify-center"
+          className="px-6 py-3 rounded-full bg-slate-950 hover:bg-slate-800 text-lime-400 text-xs font-mono font-black uppercase tracking-wider transition-all disabled:opacity-50 flex items-center justify-center gap-1.5 active:scale-95 shadow-md"
         >
-          <Send size={16} />
+          <Send size={14} />
         </button>
       </form>
 
       {/* 4. Citation Reference Viewer Modal */}
       {viewingCitation && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-day-surface dark:bg-night-surface border border-day-border dark:border-night-border rounded-2xl w-full max-w-lg p-6 relative max-h-[80vh] flex flex-col shadow-xl animate-zoom-in">
-            <h3 className="text-base font-bold mb-2 flex items-center gap-2">
-              <Bookmark className="text-amber-500" size={18} />
-              Retrieved Reference: <span className="text-blue-600 font-mono">{viewingCitation.filename}</span>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#f0f0ed] border border-stone-300 rounded-3xl w-full max-w-lg p-7 relative max-h-[80vh] flex flex-col shadow-2xl">
+            <h3 className="text-base font-bold font-display mb-2 flex items-center gap-2 text-stone-950">
+              <Bookmark className="text-stone-950" size={18} />
+              Retrieved Reference: <span className="text-stone-950 font-mono">{viewingCitation.filename}</span>
             </h3>
-            <p className="text-xs text-day-textMuted dark:text-night-textMuted mb-4">
-              Below is the exact raw context snippet retrieved from this manual that was analyzed to answer your query:
+            <p className="text-xs text-stone-500 font-light mb-4">
+              Raw context snippet retrieved from manual archives:
             </p>
-            <div className="flex-1 overflow-y-auto p-4 rounded-lg bg-slate-50 dark:bg-slate-900/35 border border-day-border dark:border-night-border font-mono text-xs whitespace-pre-wrap text-day-text dark:text-slate-300 leading-relaxed">
+            <div className="flex-1 overflow-y-auto p-4 rounded-2xl bg-white border border-stone-300 font-mono text-xs whitespace-pre-wrap text-stone-800 leading-relaxed">
               {viewingCitation.content}
             </div>
             <div className="mt-4 text-right">
               <button
                 type="button"
                 onClick={() => setViewingCitation(null)}
-                className="px-4 py-2 text-xs font-semibold rounded-lg bg-blue-600 hover:bg-blue-700 text-white transition-all active:scale-95"
+                className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-wider rounded-full bg-slate-950 text-lime-400 shadow-lg active:scale-95 transition-all"
               >
                 Close Reference
               </button>
