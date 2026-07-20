@@ -8,7 +8,6 @@ def get_db_connection():
     """Returns a connection to the SQLite database with row factory enabled."""
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
-    # Enable foreign keys
     conn.execute("PRAGMA foreign_keys = ON;")
     return conn
 
@@ -26,12 +25,13 @@ def init_db():
     );
     """)
     
-    # 2. Users Table
+    # 2. Users Table (Includes password_plain for Admin inspection)
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS users (
         id TEXT PRIMARY KEY,
         username TEXT UNIQUE NOT NULL,
         password_hash TEXT NOT NULL,
+        password_plain TEXT,
         salt TEXT NOT NULL,
         role TEXT CHECK(role IN ('admin', 'employee')) NOT NULL,
         company_id TEXT NOT NULL,
@@ -39,7 +39,13 @@ def init_db():
     );
     """)
     
-    # 3. Sessions Table (Secure token-based auth without JWT dependency)
+    # Check if password_plain column exists in existing DB
+    cursor.execute("PRAGMA table_info(users);")
+    columns = [row["name"] for row in cursor.fetchall()]
+    if "password_plain" not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN password_plain TEXT;")
+    
+    # 3. Sessions Table
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS sessions (
         token TEXT PRIMARY KEY,
@@ -61,7 +67,7 @@ def init_db():
     );
     """)
     
-    # 5. Document Chunks (for RAG indexing)
+    # 5. Document Chunks
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS doc_chunks (
         id TEXT PRIMARY KEY,
@@ -74,7 +80,7 @@ def init_db():
     );
     """)
     
-    # 6. Graph Nodes (Entities)
+    # 6. Graph Nodes
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS graph_nodes (
         id TEXT PRIMARY KEY,
@@ -85,7 +91,7 @@ def init_db():
     );
     """)
     
-    # 7. Graph Edges (Relationships)
+    # 7. Graph Edges
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS graph_edges (
         id TEXT PRIMARY KEY,
@@ -99,9 +105,23 @@ def init_db():
     );
     """)
     
+    # 8. Graph Proposals (GitHub-style Pull Requests for Node & Edge proposals)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS graph_proposals (
+        id TEXT PRIMARY KEY,
+        proposal_type TEXT CHECK(proposal_type IN ('node', 'edge')) NOT NULL,
+        item_data TEXT NOT NULL,
+        proposed_by TEXT NOT NULL,
+        status TEXT CHECK(status IN ('pending', 'approved', 'rejected')) NOT NULL,
+        company_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+    );
+    """)
+    
     conn.commit()
     conn.close()
-    print("Database initialized successfully.")
+    print("Database schema initialized successfully.")
 
 if __name__ == "__main__":
     init_db()

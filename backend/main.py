@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile,
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, get_db_connection
-from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest
+from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest, AddNodeRequest, AddEdgeRequest
 import auth
 import secrets
 import io
@@ -239,6 +239,172 @@ def get_graph_network(user: dict = Depends(get_current_user)):
     
     conn.close()
     return {"nodes": nodes, "edges": edges}
+
+import json
+
+@app.post("/api/graph/add-node", status_code=status.HTTP_201_CREATED)
+def add_graph_node(payload: AddNodeRequest, user: dict = Depends(get_current_user)):
+    """If employee: submits a Pull Request proposal for Admin review. If admin: merges directly."""
+    company_id = user["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if user["role"] == "employee":
+            proposal_id = f"pr_{secrets.token_hex(4)}"
+            created_at = datetime.utcnow().isoformat()
+            item_data = json.dumps(payload.dict())
+            cursor.execute(
+                "INSERT INTO graph_proposals (id, proposal_type, item_data, proposed_by, status, company_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (proposal_id, 'node', item_data, user['username'], 'pending', company_id, created_at)
+            )
+            conn.commit()
+            return {
+                "message": f"Node proposal '{payload.name}' submitted! Awaiting Admin review & merge.",
+                "proposal_id": proposal_id,
+                "is_proposal": True
+            }
+        else:
+            cursor.execute(
+                "INSERT OR REPLACE INTO graph_nodes (id, name, type, company_id) VALUES (?, ?, ?, ?)",
+                (payload.id, payload.name, payload.type, company_id)
+            )
+            conn.commit()
+            return {"message": f"Node '{payload.name}' added successfully.", "node": payload.dict(), "is_proposal": False}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to process node request: {e}")
+    finally:
+        conn.close()
+
+@app.post("/api/graph/add-edge", status_code=status.HTTP_201_CREATED)
+def add_graph_edge(payload: AddEdgeRequest, user: dict = Depends(get_current_user)):
+    """If employee: submits a Pull Request proposal for Admin review. If admin: merges directly."""
+    company_id = user["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if user["role"] == "employee":
+            proposal_id = f"pr_{secrets.token_hex(4)}"
+            created_at = datetime.utcnow().isoformat()
+            item_data = json.dumps(payload.dict())
+            cursor.execute(
+                "INSERT INTO graph_proposals (id, proposal_type, item_data, proposed_by, status, company_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (proposal_id, 'edge', item_data, user['username'], 'pending', company_id, created_at)
+            )
+            conn.commit()
+            return {
+                "message": f"Edge proposal '{payload.source_id}' -> '{payload.target_id}' submitted! Awaiting Admin review & merge.",
+                "proposal_id": proposal_id,
+                "is_proposal": True
+            }
+        else:
+            cursor.execute(
+                "INSERT OR REPLACE INTO graph_edges (source_id, target_id, rel_type, company_id) VALUES (?, ?, ?, ?)",
+                (payload.source_id, payload.target_id, payload.rel_type, company_id)
+            )
+            conn.commit()
+            return {"message": f"Edge '{payload.source_id}' -> '{payload.target_id}' added successfully.", "edge": payload.dict(), "is_proposal": False}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to process edge request: {e}")
+    finally:
+        conn.close()
+
+@app.get("/api/admin/graph-proposals")
+def get_graph_proposals(admin: dict = Depends(require_admin)):
+    """Lists all pending Pull Request graph proposals for Admin review."""
+    company_id = admin["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "SELECT id, proposal_type, item_data, proposed_by, status, created_at FROM graph_proposals WHERE company_id = ? AND status = 'pending' ORDER BY created_at DESC",
+        (company_id,)
+    )
+    rows = cursor.fetchall()
+    conn.close()
+    proposals = []
+    for r in rows:
+        item = json.loads(r["item_data"])
+        proposals.append({
+            "id": r["id"],
+            "proposal_type": r["proposal_type"],
+            "item": item,
+            "proposed_by": r["proposed_by"],
+            "status": r["status"],
+            "created_at": r["created_at"]
+        })
+    return proposals
+
+@app.post("/api/admin/graph-proposals/{proposal_id}/approve")
+def approve_graph_proposal(proposal_id: str, admin: dict = Depends(require_admin)):
+    """Approves and merges a pending employee proposal into the live Knowledge Graph."""
+    company_id = admin["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "SELECT proposal_type, item_data FROM graph_proposals WHERE id = ? AND company_id = ? AND status = 'pending'",
+            (proposal_id, company_id)
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Proposal not found or already processed.")
+            
+        p_type = row["proposal_type"]
+        item = json.loads(row["item_data"])
+        
+        if p_type == "node":
+            cursor.execute(
+                "INSERT OR REPLACE INTO graph_nodes (id, name, type, company_id) VALUES (?, ?, ?, ?)",
+                (item["id"], item["name"], item["type"], company_id)
+            )
+        elif p_type == "edge":
+            cursor.execute(
+                "INSERT OR REPLACE INTO graph_edges (source_id, target_id, rel_type, company_id) VALUES (?, ?, ?, ?)",
+                (item["source_id"], item["target_id"], item["rel_type"], company_id)
+            )
+            
+        cursor.execute("UPDATE graph_proposals SET status = 'approved' WHERE id = ?", (proposal_id,))
+        conn.commit()
+        return {"message": f"Proposal '{proposal_id}' approved and merged into Knowledge Graph!"}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to approve proposal: {e}")
+    finally:
+        conn.close()
+
+@app.post("/api/admin/graph-proposals/{proposal_id}/reject")
+def reject_graph_proposal(proposal_id: str, admin: dict = Depends(require_admin)):
+    """Rejects a pending proposal."""
+    company_id = admin["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE graph_proposals SET status = 'rejected' WHERE id = ? AND company_id = ?", (proposal_id, company_id))
+        conn.commit()
+        return {"message": f"Proposal '{proposal_id}' rejected."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to reject proposal: {e}")
+    finally:
+        conn.close()
+
+@app.delete("/api/graph/node/{node_id}")
+def delete_graph_node(node_id: str, user: dict = Depends(get_current_user)):
+    """Deletes a node and all connected edges."""
+    company_id = user["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM graph_nodes WHERE id = ? AND company_id = ?", (node_id, company_id))
+        cursor.execute("DELETE FROM graph_edges WHERE (source_id = ? OR target_id = ?) AND company_id = ?", (node_id, node_id, company_id))
+        conn.commit()
+        return {"message": f"Node '{node_id}' and associated edges deleted."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete node: {e}")
+    finally:
+        conn.close()
 
 @app.post("/api/copilot/chat")
 def copilot_chat(payload: ChatRequest, user: dict = Depends(get_current_user)):

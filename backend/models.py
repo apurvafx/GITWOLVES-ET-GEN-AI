@@ -15,3 +15,13 @@ class CreateEmployeeRequest(BaseModel):
 
 class ChatRequest(BaseModel):
     query: str = Field(..., min_length=1)
+
+class AddNodeRequest(BaseModel):
+    id: str = Field(..., min_length=1)
+    name: str = Field(..., min_length=1)
+    type: str = Field(..., min_length=1)
+
+class AddEdgeRequest(BaseModel):
+    source_id: str = Field(..., min_length=1)
+    target_id: str = Field(..., min_length=1)
+    rel_type: str = Field(default="CONNECTED_TO")

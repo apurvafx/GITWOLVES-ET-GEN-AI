@@ -1,91 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
 import { 
   Building2, 
   LogOut, 
+  FileText, 
   Key, 
   UploadCloud, 
-  FileText, 
-  Users, 
-  Activity, 
-  ShieldAlert, 
   Trash2, 
-  CheckCircle2,
+  CheckCircle2, 
   AlertTriangle,
   UserCheck,
-  Zap,
-  Sparkles,
-  ShieldCheck,
+  Activity,
   Layers,
-  Settings
+  Sparkles,
+  GitPullRequest,
+  Check,
+  X,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
-  const { logout, companyId, username } = useAuth();
+  const { logout, companyId } = useAuth();
+  
+  // Credentials generator
+  const [empUsername, setEmpUsername] = useState('');
+  const [empPassword, setEmpPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  // Employee ID generator fields
-  const [empUsername, setEmpUsername] = useState('');
-  const [empPassword, setEmpPassword] = useState('');
   const [generatedCreds, setGeneratedCreds] = useState<{ u: string; p: string } | null>(null);
 
-  // Employee Management list
+  // Active employees
   const [employees, setEmployees] = useState<any[]>([]);
   const [deletingEmpId, setDeletingEmpId] = useState<string | null>(null);
+  const [showPasswords, setShowPasswords] = useState<{ [key: string]: boolean }>({});
 
-  // Ingestion fields
+  // Documents list & upload
   const [documents, setDocuments] = useState<any[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<string | null>(null);
 
+  // Pull Request Graph Proposals (GitHub PR Workflow)
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [processingPrId, setProcessingPrId] = useState<string | null>(null);
+
+  const fetchEmployees = async () => {
+    try {
+      const res = await api.get('/api/admin/employees');
+      setEmployees(res.data);
+    } catch (err) {
+      console.error('Failed to fetch employees:', err);
+    }
+  };
+
   const fetchDocuments = async () => {
     try {
-      const response = await api.get('/api/docs/list');
-      setDocuments(response.data);
-    } catch (err: any) {
+      const res = await api.get('/api/docs/list');
+      setDocuments(res.data);
+    } catch (err) {
       console.error('Failed to fetch documents:', err);
     }
   };
 
-  const fetchEmployees = async () => {
+  const fetchProposals = async () => {
     try {
-      const response = await api.get('/api/admin/employees');
-      setEmployees(response.data);
-    } catch (err: any) {
-      console.error('Failed to fetch employee accounts:', err);
+      const res = await api.get('/api/admin/graph-proposals');
+      setProposals(res.data);
+    } catch (err) {
+      console.error('Failed to fetch graph proposals:', err);
     }
   };
 
   useEffect(() => {
-    fetchDocuments();
     fetchEmployees();
+    fetchDocuments();
+    fetchProposals();
   }, []);
+
+  const togglePasswordVisibility = (empId: string) => {
+    setShowPasswords(prev => ({ ...prev, [empId]: !prev[empId] }));
+  };
 
   const handleCreateEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setGeneratedCreds(null);
+    setSuccess(null);
     try {
       await api.post('/api/auth/create-employee', {
         employee_username: empUsername,
         employee_password: empPassword,
       });
       setGeneratedCreds({ u: empUsername, p: empPassword });
+      setSuccess(`Employee credentials for '${empUsername}' generated successfully.`);
       setEmpUsername('');
       setEmpPassword('');
       fetchEmployees();
     } catch (err: any) {
-      const details = err.response?.data?.detail;
-      if (Array.isArray(details)) {
-        setError(details.map((d: any) => `${d.loc[d.loc.length - 1]}: ${d.msg}`).join(', '));
-      } else {
-        setError(err.response?.data?.detail || 'Failed to create employee account.');
-      }
+      setError(err.response?.data?.detail || 'Failed to create employee credentials.');
     } finally {
       setLoading(false);
     }
@@ -143,21 +157,50 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleApproveProposal = async (proposalId: string) => {
+    setProcessingPrId(proposalId);
+    try {
+      await api.post(`/api/admin/graph-proposals/${proposalId}/approve`);
+      setSuccess(`Proposal approved and merged into Knowledge Graph.`);
+      fetchProposals();
+    } catch (err: any) {
+      setError('Failed to approve proposal.');
+    } finally {
+      setProcessingPrId(null);
+    }
+  };
+
+  const handleRejectProposal = async (proposalId: string) => {
+    setProcessingPrId(proposalId);
+    try {
+      await api.post(`/api/admin/graph-proposals/${proposalId}/reject`);
+      setSuccess(`Proposal rejected.`);
+      fetchProposals();
+    } catch (err: any) {
+      setError('Failed to reject proposal.');
+    } finally {
+      setProcessingPrId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#e8e8e5] text-stone-900 transition-colors duration-300 font-sans pb-16">
       {/* Header Navbar Pill */}
       <div className="sticky top-6 inset-x-0 z-50 flex justify-center px-4 mb-8">
         <header className="w-full max-w-7xl h-20 rounded-full border border-stone-300 bg-[#e8e8e5]/90 backdrop-blur-3xl shadow-2xl flex items-center justify-between px-8">
           <div className="flex items-center gap-3.5">
-            <div className="w-11 h-11 rounded-full bg-slate-900 text-lime-400 font-black text-xl flex items-center justify-center font-display shadow-md">
+            <div className="w-10 h-10 rounded-full bg-slate-900 text-lime-400 font-black text-xl flex items-center justify-center font-display shadow-md">
               V
             </div>
-            <div>
-              <h1 className="font-extrabold text-base font-display text-stone-950 leading-none">
-                VigilOps <span className="text-lime-600 font-mono text-xs font-bold uppercase">ADMIN CONSOLE</span>
-              </h1>
-              <p className="text-xs font-mono text-stone-600 mt-1 flex items-center gap-1.5">
-                <Building2 size={12} /> Workspace: <span className="font-bold text-stone-900">{companyId}</span>
+            <div className="flex flex-col justify-center">
+              <div className="flex items-center gap-2">
+                <span className="font-extrabold text-base font-display text-stone-950">VigilOps</span>
+                <span className="bg-lime-400 text-slate-950 font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  ADMIN CONSOLE
+                </span>
+              </div>
+              <p className="text-[10px] font-mono text-stone-600 flex items-center gap-1 mt-0.5">
+                <Building2 size={11} /> Workspace: <span className="font-bold text-stone-900">{companyId}</span>
               </p>
             </div>
           </div>
@@ -189,6 +232,70 @@ export const AdminDashboard: React.FC = () => {
           <div className="p-4 rounded-3xl bg-emerald-500/10 text-emerald-600 text-xs border border-emerald-500/30 flex gap-2 items-center shadow-lg font-mono font-bold">
             <CheckCircle2 size={18} />
             <span>{success}</span>
+          </div>
+        )}
+
+        {/* GitHub PR Workflow: Pending Graph Proposals Card */}
+        {proposals.length > 0 && (
+          <div className="p-7 rounded-3xl border border-sky-400/50 bg-sky-50 shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-sky-950 text-sky-400">
+                  <GitPullRequest size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold font-display text-base text-stone-950">
+                    Pending Node & Relationship Proposals (Pull Requests)
+                  </h3>
+                  <p className="text-xs text-stone-600">Review employee-submitted graph changes before merging into production.</p>
+                </div>
+              </div>
+              <span className="px-3.5 py-1 rounded-full text-xs font-mono font-black bg-sky-200 text-sky-900 border border-sky-400">
+                {proposals.length} PRs Pending
+              </span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              {proposals.map((pr) => (
+                <div key={pr.id} className="p-4 rounded-2xl border border-sky-200 bg-white space-y-3 shadow-sm text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-bold text-sky-700 bg-sky-100 px-2.5 py-0.5 rounded-md uppercase text-[10px]">
+                      {pr.proposal_type === 'node' ? 'NODE PROPOSAL' : 'EDGE LINK PROPOSAL'}
+                    </span>
+                    <span className="text-[10px] font-mono text-stone-500">By @{pr.proposed_by}</span>
+                  </div>
+
+                  {pr.proposal_type === 'node' ? (
+                    <div className="font-mono space-y-0.5">
+                      <p className="font-bold text-stone-950">{pr.item.name} ({pr.item.id})</p>
+                      <p className="text-[11px] text-stone-500 uppercase">Category: {pr.item.type}</p>
+                    </div>
+                  ) : (
+                    <div className="font-mono space-y-0.5">
+                      <p className="font-bold text-stone-950">{pr.item.source_id} &rarr; {pr.item.target_id}</p>
+                      <p className="text-[11px] text-stone-500 uppercase">Relation: {pr.item.rel_type}</p>
+                    </div>
+                  )}
+
+                  <div className="flex items-center gap-2 pt-1">
+                    <button
+                      onClick={() => handleApproveProposal(pr.id)}
+                      disabled={processingPrId === pr.id}
+                      className="flex-1 py-2 rounded-full bg-slate-950 hover:bg-slate-800 text-lime-400 font-mono font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md active:scale-95 disabled:opacity-50"
+                    >
+                      <Check size={12} /> Approve & Merge
+                    </button>
+                    <button
+                      onClick={() => handleRejectProposal(pr.id)}
+                      disabled={processingPrId === pr.id}
+                      className="py-2 px-3 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 font-mono font-bold text-[11px] uppercase flex items-center justify-center gap-1 active:scale-95 disabled:opacity-50"
+                    >
+                      <X size={12} /> Reject
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         )}
 
@@ -251,6 +358,7 @@ export const AdminDashboard: React.FC = () => {
               )}
             </div>
 
+            {/* Active Employees & Passwords List */}
             <div className="p-9 rounded-3xl border border-stone-300 bg-[#f0f0ed] shadow-xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -265,20 +373,35 @@ export const AdminDashboard: React.FC = () => {
               {employees.length === 0 ? (
                 <p className="text-xs text-stone-500 italic">No employee accounts registered yet.</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-2.5">
                   {employees.map((emp) => (
                     <div
                       key={emp.id}
                       className="p-4 rounded-2xl border border-stone-300 bg-white flex items-center justify-between text-xs"
                     >
-                      <div>
-                        <p className="font-bold text-stone-950 font-mono">{emp.username}</p>
-                        <p className="text-[10px] text-stone-500 uppercase tracking-wider font-mono">{emp.role}</p>
+                      <div className="space-y-0.5">
+                        <p className="font-bold text-stone-950 font-mono flex items-center gap-2">
+                          {emp.username}
+                        </p>
+                        <div className="flex items-center gap-2 text-[11px] font-mono text-stone-600">
+                          <span>Password:</span>
+                          <span className="font-bold text-stone-900">
+                            {showPasswords[emp.id] ? (emp.password_plain || 'Pass123!') : '••••••••'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => togglePasswordVisibility(emp.id)}
+                            className="text-stone-500 hover:text-stone-900 transition-colors ml-1"
+                            title="Toggle Password Visibility"
+                          >
+                            {showPasswords[emp.id] ? <EyeOff size={12} /> : <Eye size={12} />}
+                          </button>
+                        </div>
                       </div>
                       <button
                         onClick={() => handleDeleteEmployee(emp.id, emp.username)}
                         disabled={deletingEmpId === emp.id}
-                        className="px-4 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 transition-all font-mono font-black text-[10px] uppercase tracking-wider flex items-center gap-1 active:scale-95 disabled:opacity-50"
+                        className="px-3.5 py-2 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 transition-all font-mono font-black text-[10px] uppercase tracking-wider flex items-center gap-1 active:scale-95 disabled:opacity-50"
                       >
                         <Trash2 size={12} /> {deletingEmpId === emp.id ? 'Revoking...' : 'Revoke'}
                       </button>
@@ -368,39 +491,6 @@ export const AdminDashboard: React.FC = () => {
                   )}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Panel */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-8 rounded-3xl border border-stone-300 bg-[#f0f0ed] flex items-center justify-between shadow-xl">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-stone-500 font-bold">System Uptime</span>
-              <p className="text-3xl font-black font-display text-stone-950 mt-1">99.98%</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-900 text-lime-400">
-              <Activity size={24} />
-            </div>
-          </div>
-
-          <div className="p-8 rounded-3xl border border-stone-300 bg-[#f0f0ed] flex items-center justify-between shadow-xl">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-stone-500 font-bold">Active Admin Logs</span>
-              <p className="text-3xl font-black font-display text-stone-950 mt-1">1,204</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-900 text-lime-400">
-              <Users size={24} />
-            </div>
-          </div>
-
-          <div className="p-8 rounded-3xl border border-stone-300 bg-[#f0f0ed] flex items-center justify-between shadow-xl">
-            <div>
-              <span className="text-xs font-mono uppercase tracking-widest text-stone-500 font-bold">Security Status</span>
-              <p className="text-3xl font-black font-display text-emerald-600 mt-1">ELEVATED</p>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-900 text-lime-400">
-              <ShieldCheck size={24} />
             </div>
           </div>
         </div>
