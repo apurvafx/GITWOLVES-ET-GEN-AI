@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
-import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity } from 'lucide-react';
+import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity, Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 
 interface Message {
   sender: 'user' | 'pilot';
@@ -25,15 +25,103 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   ]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Voice Controls (Step 3: Speech-to-Text & Text-to-Speech)
+  const [isListening, setIsListening] = useState(false);
+  const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
+  const recognitionRef = useRef<any>(null);
+
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
 
+  // Initialize Web Speech API for voice dictation
+  useEffect(() => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (SpeechRecognition) {
+      const recognition = new SpeechRecognition();
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.lang = 'en-US';
+
+      recognition.onresult = (event: any) => {
+        const transcript = Array.from(event.results)
+          .map((result: any) => result[0])
+          .map((result: any) => result.transcript)
+          .join('');
+        setQuery(transcript);
+      };
+
+      recognition.onerror = (event: any) => {
+        console.error("Speech recognition error:", event.error);
+        setIsListening(false);
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognitionRef.current = recognition;
+    }
+  }, []);
+
+  const toggleVoiceDictation = () => {
+    if (!recognitionRef.current) {
+      alert("Voice speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      setQuery('');
+      recognitionRef.current.start();
+      setIsListening(true);
+    }
+  };
+
+  // Text-to-Speech Audio Readout
+  const handleSpeakText = (text: string, index: number) => {
+    if (!('speechSynthesis' in window)) {
+      alert("Text-to-speech audio is not supported in this browser.");
+      return;
+    }
+
+    if (speakingIndex === index) {
+      window.speechSynthesis.cancel();
+      setSpeakingIndex(null);
+      return;
+    }
+
+    window.speechSynthesis.cancel();
+    const cleanText = text.replace(/\*\*/g, '');
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onend = () => {
+      setSpeakingIndex(null);
+    };
+
+    utterance.onerror = () => {
+      setSpeakingIndex(null);
+    };
+
+    setSpeakingIndex(index);
+    window.speechSynthesis.speak(utterance);
+  };
+
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    }
 
     const userQuery = query;
     setQuery('');
@@ -84,11 +172,11 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
           <div>
             <h2 className="font-bold text-xs font-display text-stone-950">DocPilot Assistant</h2>
             <p className="text-[9px] font-mono text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> System Online
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Hands-Free Voice Online
             </p>
           </div>
         </div>
-        <span className="text-[10px] font-mono font-bold text-stone-500">768-Dim RAG Grounded</span>
+        <span className="text-[10px] font-mono font-bold text-stone-500">Voice & RAG Grounded</span>
       </div>
 
       {/* 2. Messages Box */}
@@ -113,13 +201,29 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
 
             {/* Message Bubble */}
             <div
-              className={`p-4 rounded-3xl text-xs leading-relaxed border ${
+              className={`p-4 rounded-3xl text-xs leading-relaxed border relative group ${
                 msg.sender === 'user'
                   ? 'bg-stone-300 border-stone-400 text-stone-950'
                   : 'bg-white border-stone-300 text-stone-800'
               }`}
             >
-              <div className="whitespace-pre-wrap">{renderMessageText(msg.text)}</div>
+              {/* Spoken Text-to-Speech Audio Readout Button */}
+              {msg.sender === 'pilot' && (
+                <button
+                  type="button"
+                  onClick={() => handleSpeakText(msg.text, index)}
+                  className={`absolute top-3 right-3 p-1.5 rounded-full transition-all ${
+                    speakingIndex === index 
+                      ? 'bg-lime-400 text-slate-950 animate-pulse' 
+                      : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
+                  }`}
+                  title={speakingIndex === index ? "Stop Spoken Audio" : "Listen to Spoken Instructions"}
+                >
+                  {speakingIndex === index ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                </button>
+              )}
+
+              <div className="whitespace-pre-wrap pr-6">{renderMessageText(msg.text)}</div>
 
               {/* Active Graph Nodes tags */}
               {msg.activeNodes && msg.activeNodes.length > 0 && (
@@ -190,13 +294,26 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
         <div ref={chatEndRef} />
       </div>
 
-      {/* 3. Input Form */}
-      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-stone-300 bg-[#f0f0ed] flex gap-2.5">
+      {/* 3. Input Form with Microphone Dictation */}
+      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-stone-300 bg-[#f0f0ed] flex gap-2">
+        <button
+          type="button"
+          onClick={toggleVoiceDictation}
+          className={`p-3 rounded-full transition-all flex items-center justify-center shadow-md ${
+            isListening
+              ? 'bg-red-500 text-white animate-pulse ring-4 ring-red-400/50'
+              : 'bg-stone-300 hover:bg-stone-400 text-stone-950 border border-stone-400'
+          }`}
+          title={isListening ? "Stop Voice Dictation" : "Hands-Free Voice Input (Microphone)"}
+        >
+          {isListening ? <MicOff size={16} /> : <Mic size={16} />}
+        </button>
+
         <input
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Ask DocPilot anything about manuals, safety limits, or SOPs..."
+          placeholder={isListening ? "Listening... Speak your query now..." : "Ask DocPilot or click microphone for voice command..."}
           disabled={loading}
           className="flex-1 px-5 py-3 rounded-full border border-stone-300 bg-white text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono disabled:opacity-50"
         />
