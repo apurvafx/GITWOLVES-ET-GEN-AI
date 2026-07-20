@@ -84,11 +84,17 @@ def extract_graph_from_text(text: str) -> dict:
             pass
         return {"nodes": [], "edges": []}
 
-def save_graph_to_db(graph_data: dict, company_id: str):
+def save_graph_to_db(graph_data: dict | list, company_id: str):
     """
     Saves extracted nodes and edges into SQLite.
     Uses INSERT OR IGNORE to prevent duplicate node keys.
     """
+    if isinstance(graph_data, list):
+        if len(graph_data) > 0 and isinstance(graph_data[0], dict):
+            graph_data = graph_data[0]
+        else:
+            graph_data = {"nodes": [], "edges": []}
+
     conn = get_db_connection()
     cursor = conn.cursor()
     

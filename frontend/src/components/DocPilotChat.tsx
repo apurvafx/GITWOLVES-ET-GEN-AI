@@ -76,9 +76,9 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-day-surface dark:bg-night-surface border border-day-border dark:border-night-border rounded-2xl overflow-hidden shadow-sm">
+    <div className="flex flex-col h-full max-h-full overflow-hidden bg-day-surface dark:bg-night-surface border border-day-border dark:border-night-border rounded-2xl shadow-sm">
       {/* 1. Panel Header */}
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-day-border dark:border-night-border bg-slate-50 dark:bg-slate-900/10">
+      <div className="flex-shrink-0 flex items-center gap-2 px-6 py-4 border-b border-day-border dark:border-night-border bg-slate-50 dark:bg-slate-900/10">
         <Bot className="text-blue-600 animate-pulse" size={20} />
         <div>
           <h2 className="font-bold text-sm">DocPilot Assistant</h2>
@@ -87,7 +87,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
       </div>
 
       {/* 2. Messages Box */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+      <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
         {messages.map((msg, index) => (
           <div
             key={index}
@@ -185,7 +185,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
       </div>
 
       {/* 3. Input Form */}
-      <form onSubmit={handleSend} className="p-4 border-t border-day-border dark:border-night-border bg-slate-50 dark:bg-slate-900/10 flex gap-2">
+      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-day-border dark:border-night-border bg-slate-50 dark:bg-slate-900/10 flex gap-2">
         <input
           type="text"
           value={query}

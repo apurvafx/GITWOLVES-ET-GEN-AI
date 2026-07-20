@@ -118,6 +118,14 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
     ctx.fillText(label, node.x, node.y + r + 8);
   };
 
+  // Tune D3 physics forces for optimal node repulsion and spacious layout
+  useEffect(() => {
+    if (fgRef.current) {
+      fgRef.current.d3Force('charge')?.strength(-160);
+      fgRef.current.d3Force('link')?.distance(65);
+    }
+  }, [data]);
+
   return (
     <div
       ref={containerRef}
@@ -138,10 +146,12 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
         onNodeClick={(node: any) => {
           if (onNodeClick) onNodeClick(node.id);
         }}
-        linkColor={() => (theme === 'dark' ? 'rgba(255, 255, 255, 0.6)' : 'rgba(15, 23, 42, 0.6)')}
-        linkWidth={1.5}
-        d3VelocityDecay={0.4}
-        cooldownTicks={100}
+        linkColor={() => (theme === 'dark' ? 'rgba(255, 255, 255, 0.4)' : 'rgba(15, 23, 42, 0.4)')}
+        linkWidth={1.2}
+        d3AlphaDecay={0.02}
+        d3VelocityDecay={0.3}
+        warmupTicks={50}
+        cooldownTicks={150}
       />
     </div>
   );
