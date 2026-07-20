@@ -5,6 +5,8 @@ from database import init_db, get_db_connection
 from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest
 import auth
 import secrets
+import io
+import pypdf
 from datetime import datetime
 import search_engine
 import graph_parser
@@ -127,16 +129,27 @@ def logout(credentials: HTTPAuthorizationCredentials = Depends(security)):
 
 @app.post("/api/docs/upload", status_code=status.HTTP_201_CREATED)
 async def upload_document(file: UploadFile = File(...), admin: dict = Depends(require_admin)):
-    """Uploads a technical document, chunks it, embeds it, and extracts the knowledge graph."""
-    if not file.filename.endswith(('.txt', '.md')):
-        raise HTTPException(status_code=400, detail="Only plain text (.txt) and markdown (.md) files are supported.")
+    """Uploads a technical document (.pdf, .txt, .md), extracts text, chunks it, embeds it, and extracts the knowledge graph."""
+    filename = file.filename
+    if not filename.lower().endswith(('.txt', '.md', '.pdf')):
+        raise HTTPException(status_code=400, detail="Only PDF (.pdf), plain text (.txt), and markdown (.md) files are supported.")
     
     try:
-        # Read file content as text
         contents = await file.read()
-        text_content = contents.decode('utf-8')
+        if filename.lower().endswith('.pdf'):
+            pdf_reader = pypdf.PdfReader(io.BytesIO(contents))
+            text_pages = []
+            for i, page in enumerate(pdf_reader.pages):
+                page_text = page.extract_text()
+                if page_text:
+                    text_pages.append(f"--- Page {i+1} ---\n{page_text}")
+            text_content = "\n\n".join(text_pages)
+            if not text_content.strip():
+                raise ValueError("No extractable text found in PDF document.")
+        else:
+            text_content = contents.decode('utf-8')
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Failed to read file: {e}")
+        raise HTTPException(status_code=400, detail=f"Failed to read file content: {e}")
         
     company_id = admin["company_id"]
     doc_id = f"doc_{secrets.token_hex(4)}"
@@ -148,7 +161,7 @@ async def upload_document(file: UploadFile = File(...), admin: dict = Depends(re
         # 1. Save document to DB
         cursor.execute(
             "INSERT INTO documents (id, filename, content, company_id, uploaded_at) VALUES (?, ?, ?, ?, ?)",
-            (doc_id, file.filename, text_content, company_id, uploaded_at)
+            (doc_id, filename, text_content, company_id, uploaded_at)
         )
         conn.commit()
     except Exception as e:
@@ -159,7 +172,7 @@ async def upload_document(file: UploadFile = File(...), admin: dict = Depends(re
         
     try:
         # 2. Chunk and index document embeddings (RAG Search Index)
-        search_engine.index_document(doc_id, file.filename, text_content, company_id)
+        search_engine.index_document(doc_id, filename, text_content, company_id)
         
         # 3. Call Gemini to extract graph nodes and edges (Knowledge Graph build)
         graph_parser.process_document_graph(text_content, company_id)
@@ -167,7 +180,7 @@ async def upload_document(file: UploadFile = File(...), admin: dict = Depends(re
         return {
             "message": "Document uploaded and indexed successfully.",
             "doc_id": doc_id,
-            "filename": file.filename
+            "filename": filename
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Failed during AI processing (embeddings or graph): {e}")
@@ -185,6 +198,31 @@ def list_documents(user: dict = Depends(get_current_user)):
     conn.close()
     return [dict(doc) for doc in docs]
 
+@app.delete("/api/docs/{doc_id}")
+def delete_document(doc_id: str, admin: dict = Depends(require_admin)):
+    """Allows Admin to delete a technical manual and clean up its RAG chunks."""
+    company_id = admin["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT filename FROM documents WHERE id = ? AND company_id = ?", (doc_id, company_id))
+        doc = cursor.fetchone()
+        if not doc:
+            raise HTTPException(status_code=404, detail="Document not found or access denied.")
+            
+        filename = doc["filename"]
+        cursor.execute("DELETE FROM documents WHERE id = ? AND company_id = ?", (doc_id, company_id))
+        cursor.execute("DELETE FROM doc_chunks WHERE doc_id = ? AND company_id = ?", (doc_id, company_id))
+        conn.commit()
+        return {"message": f"Document '{filename}' deleted successfully."}
+    except HTTPException as he:
+        raise he
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete document: {e}")
+    finally:
+        conn.close()
+
 @app.get("/api/graph/network")
 def get_graph_network(user: dict = Depends(get_current_user)):
     """Returns all nodes and edges in the company's knowledge graph."""
@@ -193,11 +231,9 @@ def get_graph_network(user: dict = Depends(get_current_user)):
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    # Fetch all nodes
     cursor.execute("SELECT id, name, type FROM graph_nodes WHERE company_id = ?", (company_id,))
     nodes = [dict(row) for row in cursor.fetchall()]
     
-    # Fetch all edges
     cursor.execute("SELECT source_id, target_id, rel_type FROM graph_edges WHERE company_id = ?", (company_id,))
     edges = [dict(row) for row in cursor.fetchall()]
     
@@ -208,8 +244,6 @@ def get_graph_network(user: dict = Depends(get_current_user)):
 def copilot_chat(payload: ChatRequest, user: dict = Depends(get_current_user)):
     """RAG Chat Copilot: searches context, calls Gemini to synthesize an answer, and maps active graph nodes."""
     company_id = user["company_id"]
-    
-    # 1. Retrieve top 3 matching chunks using Hybrid Search (TF-IDF + Cosine similarity)
     chunks = search_engine.hybrid_search(payload.query, company_id, top_k=3)
     
     if not chunks:
@@ -219,7 +253,6 @@ def copilot_chat(payload: ChatRequest, user: dict = Depends(get_current_user)):
             "active_nodes": []
         }
         
-    # 2. Call Gemini to synthesize a grounded response with citations and active node mapping
     response = search_engine.generate_rag_answer(payload.query, chunks, company_id)
     return response
 

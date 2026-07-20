@@ -132,6 +132,17 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const handleDeleteDocument = async (docId: string, filename: string) => {
+    if (!window.confirm(`Are you sure you want to delete manual '${filename}'? This will remove all associated chunk embeddings.`)) return;
+    try {
+      await api.delete(`/api/docs/${docId}`);
+      setSuccess(`Document '${filename}' deleted successfully.`);
+      fetchDocuments();
+    } catch (err: any) {
+      setError(err.response?.data?.detail || 'Failed to delete document.');
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#e8e8e5] text-stone-900 transition-colors duration-300 font-sans pb-16">
       {/* Header Navbar Pill */}
@@ -298,7 +309,7 @@ export const AdminDashboard: React.FC = () => {
             <label className="relative border-2 border-dashed border-stone-400 hover:border-stone-950 rounded-3xl p-12 flex flex-col items-center justify-center cursor-pointer transition-all bg-stone-200/50 group">
               <input
                 type="file"
-                accept=".txt"
+                accept=".txt,.pdf,.md"
                 onChange={handleFileUpload}
                 disabled={uploading}
                 className="hidden"
@@ -311,8 +322,8 @@ export const AdminDashboard: React.FC = () => {
                 </div>
               ) : (
                 <div className="text-center space-y-1">
-                  <p className="text-sm font-bold text-stone-950">Drop technical manual text files here, or click to browse</p>
-                  <p className="text-xs text-stone-500 font-mono">Supports standard text manuals (.txt)</p>
+                  <p className="text-sm font-bold text-stone-950">Drop technical PDF or text manuals here, or click to browse</p>
+                  <p className="text-xs text-stone-500 font-mono">Supports PDF manuals (.pdf), plain text (.txt), and Markdown (.md)</p>
                 </div>
               )}
             </label>
@@ -323,7 +334,7 @@ export const AdminDashboard: React.FC = () => {
                   <tr className="border-b border-stone-300 text-[10px] font-mono text-stone-500 uppercase tracking-widest">
                     <th className="pb-3">Module Name</th>
                     <th className="pb-3">Uploaded At</th>
-                    <th className="pb-3 text-right">Status</th>
+                    <th className="pb-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-stone-300 text-xs">
@@ -340,10 +351,17 @@ export const AdminDashboard: React.FC = () => {
                         <td className="py-4 text-xs text-stone-500 font-mono">
                           {new Date(doc.uploaded_at).toLocaleString()}
                         </td>
-                        <td className="py-4 text-right">
+                        <td className="py-4 text-right flex items-center justify-end gap-2">
                           <span className="inline-flex items-center px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-stone-300 text-stone-950 border border-stone-400">
                             Indexed
                           </span>
+                          <button
+                            onClick={() => handleDeleteDocument(doc.id, doc.filename)}
+                            className="p-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 transition-all"
+                            title="Delete Document"
+                          >
+                            <Trash2 size={13} />
+                          </button>
                         </td>
                       </tr>
                     ))
