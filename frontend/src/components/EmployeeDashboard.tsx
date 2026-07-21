@@ -449,7 +449,7 @@ export const EmployeeDashboard: React.FC = () => {
 
         {/* Split Screen Main */}
         <main className="flex-1 flex overflow-hidden gap-4 min-h-0">
-          <div className={`flex-col gap-2.5 flex-shrink-0 h-full min-h-0 rounded-3xl border border-stone-300/40 liquid-glass p-4 shadow-2xl ${mobileTab === 'matrix' ? 'flex w-full' : 'hidden lg:flex lg:w-[42%]'}`}>
+          <div className={`flex-col gap-2.5 h-full min-h-0 rounded-3xl border border-stone-300/40 liquid-glass p-4 shadow-2xl ${mobileTab === 'matrix' ? 'flex w-full' : 'hidden lg:flex lg:flex-1'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 bg-stone-300/60 p-1 rounded-full border border-stone-350">
                 <button
@@ -770,7 +770,7 @@ export const EmployeeDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:flex-1'}`}>
+          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:w-[32%] lg:min-w-[360px] flex-shrink-0'}`}>
             <DocPilotChat onNodeFocus={handleNodeFocus} />
           </div>
         </main>
