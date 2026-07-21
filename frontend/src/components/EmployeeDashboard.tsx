@@ -770,7 +770,7 @@ export const EmployeeDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:w-[32%] lg:min-w-[360px] flex-shrink-0'}`}>
+          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:w-[38%] lg:min-w-[420px] flex-shrink-0'}`}>
             <DocPilotChat onNodeFocus={handleNodeFocus} />
           </div>
         </main>
