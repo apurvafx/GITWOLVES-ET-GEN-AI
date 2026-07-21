@@ -18,11 +18,11 @@
 </h1>
 
 <p align="center">
-  <em>Transform heavy SOPs, OEM manuals & safety regulations into an autonomous, queryable Operations Matrix powered by zero-hallucination RAG.</em>
+  <em>Transform unstructured operating manuals, isolation standards, and shift log archives into an interactive topological graph powered by empirical RAG answering.</em>
 </p>
 
 <p align="center">
-  <a href="https://vigilops-jade.vercel.app/#services"><img src="https://img.shields.io/badge/🌐_Live_Demo-vigilops--jade.vercel.app-0a0a0a?style=for-the-badge" /></a>
+  <a href="https://vigilops-jade.vercel.app/#services"><img src="https://img.shields.io/badge/Live_Demo-vigilops--jade.vercel.app-0a0a0a?style=for-the-badge" /></a>
 </p>
 
 ---
@@ -33,68 +33,68 @@
 
 ---
 
-## 📋 Table of Contents
+## Table of Contents
 
-- [Problem Statement](#-problem-statement)
-- [Our Solution](#-our-solution)
-- [Live Demo](#-live-demo)
-- [Features](#-features)
-- [System Architecture](#-system-architecture)
-- [RAG Pipeline Flowchart](#-rag-pipeline-flowchart)
-- [Tech Stack](#-tech-stack)
-- [Project Structure](#-project-structure)
-- [Evaluation Metrics](#-evaluation-metrics)
-- [Screenshots](#-screenshots)
-- [Getting Started](#-getting-started)
-- [API Reference](#-api-reference)
-- [Dataset](#-dataset)
-- [Team](#-team)
-- [License](#-license)
-
----
-
-## 🔴 Problem Statement
-
-In high-risk industrial environments like oil refineries and chemical plants, thousands of pages of **critical safety documents** — OEM equipment manuals, government safety regulations (OISD), standard operating procedures (SOPs), and incident reports — sit scattered across disconnected systems. When equipment malfunctions on the plant floor, operators waste precious minutes manually searching through filing cabinets and PDFs for the correct shutdown procedure or safety limit.
-
-**The AI Hallucination Threat:** Generic AI chatbots (like ChatGPT) don't have access to your plant's specific manuals. Ask one *"What is the max temperature for PUMP-101A?"* and it will confidently **invent an answer** from its general training data. In a refinery, a hallucinated safety limit can cause catastrophic failures.
+- [Problem Statement](#problem-statement)
+- [Our Solution](#our-solution)
+- [Live Demo](#live-demo)
+- [Core Features](#core-features)
+- [System Architecture](#system-architecture)
+- [RAG Pipeline Flowchart](#rag-pipeline-flowchart)
+- [Tech Stack](#tech-stack)
+- [Project Structure](#project-structure)
+- [Evaluation Metrics](#evaluation-metrics)
+- [Screenshots](#screenshots)
+- [Getting Started](#getting-started)
+- [API Reference](#api-reference)
+- [Dataset](#dataset)
+- [Team](#team)
+- [License](#license)
 
 ---
 
-## 🟢 Our Solution
+## Problem Statement
 
-**VigilOps** is an AI-powered industrial safety operations terminal that:
+In heavy industries such as oil refineries and chemical plants, safety-critical documents like OEM equipment manuals, government regulations, standard operating procedures (SOPs), and incident logs are scattered across disconnected systems. When equipment malfunctions, operators waste crucial minutes searching through multiple documents to locate shutdown procedures or physical operating limits.
 
-1. **Ingests** all company technical documents into a unified, searchable knowledge base
-2. **Connects** information using an interactive **Knowledge Graph** — a visual network showing how equipment, valves, procedures, and regulations relate to each other
-3. **Answers questions** in real-time using **Retrieval-Augmented Generation (RAG)** — ensuring the AI only uses YOUR company's actual documents, never inventing information
-4. **Manages safety isolations** digitally through a **Lock-Out/Tag-Out (LOTO)** workflow
-5. **Prevents AI hallucination** through 5 layers of grounding enforcement
-
-> **Think of it as an open-book exam for AI** — the model isn't allowed to answer from memory. It first searches your documents, reads the relevant paragraphs, and THEN writes its answer based only on what it found.
+**The Hallucination Risk:** Standard large language models lack direct access to localized plant manuals. Querying them for specific parameters yields plausible but fabricated values. In high-risk industrial scenarios, a hallucinated safety limit can cause catastrophic failures.
 
 ---
 
-## 🌐 Live Demo
+## Our Solution
 
-🔗 **[https://vigilops-jade.vercel.app/#services](https://vigilops-jade.vercel.app/#services)**
+VigilOps is an intelligent safety operations platform that:
 
-| Role | Username | Password |
-|------|----------|----------|
+1. **Ingests** technical documents into an isolated, company-specific database.
+2. **Maps** entities and relationships into an interactive **Knowledge Graph** to trace fault propagation paths visually.
+3. **Answers queries** using **Retrieval-Augmented Generation (RAG)**, restricting response synthesis to retrieved source document snippets.
+4. **Digitizes isolation workflows** through a Lock-Out/Tag-Out (LOTO) control plane.
+5. **Mitigates AI hallucinations** through a multi-layered grounding strategy.
+
+> **Operational Paradigm:** VigilOps functions like an open-book exam for generative models. Rather than relying on parameterized training weights, it retrieves source reference documents, passes the context alongside the query, and generates answers bounded strictly by that context.
+
+---
+
+## Live Demo
+
+Link: **[https://vigilops-jade.vercel.app/#services](https://vigilops-jade.vercel.app/#services)**
+
+| User Role | Username | Password |
+|---|---|---|
 | Admin | `admin_refinery` | `SafePassword123!` |
 
 ---
 
-## ✨ Features
+## Core Features
 
-### 1. 🤖 DocPilot — RAG-Powered Co-Pilot Chat
+### 1. DocPilot — Retrieval-Augmented Assistant
 
-An intelligent multilingual chatbot that answers technical queries using **only** your uploaded company documents. Supports **English**, **Hindi (देवनागरी)**, and **Hinglish** (e.g., *"PUMP-101A ka max pressure kitna hai?"*).
+A domain-specific chatbot that answers technical questions using only company-specific documents. It supports English, Hindi (Devanagari script), and Hinglish (phonetic Romanized Hindi).
 
-- Hybrid search retrieves top-3 most relevant document chunks
-- Gemini 3.1 Flash Lite synthesizes a grounded answer
-- Every response includes **clickable source citations**
-- Equipment IDs mentioned in answers are **highlighted on the live graph**
+- Hybrid search retrieves the top three most relevant document segments.
+- Google Gemini 3.1 Flash Lite synthesizes responses bounded by the retrieved context.
+- Answers contain clickable citation links to audit the source documentation.
+- Equipment IDs mentioned in the response are dynamically highlighted on the knowledge graph.
 
 <p align="center">
   <img src="assets/screenshots/08_employee_dashboard.png" alt="Employee Dashboard with DocPilot Chat" width="100%" />
@@ -102,55 +102,55 @@ An intelligent multilingual chatbot that answers technical queries using **only*
 
 ---
 
-### 2. 🕸️ D3 Topological Operations Matrix
+### 2. D3 Topological Operations Matrix
 
-A **force-directed 2D knowledge graph** rendered using D3.js physics simulation, visualizing the entire operational topology of your plant:
+A force-directed 2D network graph rendered using a D3.js physics simulation to map plant topologies:
 
-- **5 node categories**: Assets, Procedures, Regulations, Incidents, Documents
-- Category-based filtering with real-time search
-- Active node highlighting when DocPilot references entities
-- LOTO-locked nodes displayed with yellow safety badges
-- Fault propagation tracing to track incident impact chains
+- **Entity Categories:** Assets, Procedures, Regulations, Incidents, Documents.
+- Category filters and text search filter nodes dynamically.
+- Dynamic highlighting displays connected systems when DocPilot references specific assets.
+- Assets under Lock-Out/Tag-Out (LOTO) display yellow safety status rings.
+- Incident nodes allow operators to trace cascading failure paths.
 
 ---
 
-### 3. 🔒 Zero-Hallucination Fallback Guardrail
+### 3. Out-of-Domain Guardrails
 
-The system enforces strict grounding — when asked an out-of-domain question, DocPilot refuses to answer rather than making something up:
+The system enforces strict grounding. When queried on topics outside the scope of the ingested manuals, the assistant triggers a fallback instead of generating answers:
 
 <p align="center">
-  <img src="assets/screenshots/04_hallucination_guardrail_pass.png" alt="In-domain query answered with grounding" width="100%" />
+  <img src="assets/screenshots/04_hallucination_guardrail_pass.png" alt="Grounded query execution" width="100%" />
 </p>
-<p align="center"><em>✅ In-domain query — answered with evidence from OEM manual</em></p>
+<p align="center"><em>In-domain query: Answered with citations from the pump manual.</em></p>
 
 <p align="center">
   <img src="assets/screenshots/05_hallucination_guardrail_block.png" alt="Out-of-domain query blocked" width="100%" />
 </p>
-<p align="center"><em>🛑 Out-of-domain query — strictly blocked from generating a hallucinated answer</em></p>
+<p align="center"><em>Out-of-domain query: Blocked and fallback warning triggered.</em></p>
 
 ---
 
-### 4. ⚡ Hybrid Search Engine (TF-IDF + Vector Embeddings)
+### 4. Hybrid Search Engine
 
-Unlike standard keyword or pure vector search, VigilOps combines **both** methods for maximum retrieval accuracy:
+To achieve high retrieval accuracy, VigilOps implements a hybrid search algorithm combining lexical matching and semantic vector analysis:
 
 <p align="center">
   <img src="assets/screenshots/06_hybrid_search_comparison.png" alt="Hybrid Search Comparison" width="100%" />
 </p>
 
-| Method | Strength | Weakness |
-|--------|----------|----------|
-| **Keyword (TF-IDF)** | Exact match for equipment IDs | Misses semantic synonyms |
-| **Vector (Embeddings)** | Understands meaning/intent | Confuses similar alphanumeric codes |
-| **VigilOps Hybrid** | Both precision AND semantic reasoning | — |
+| Search Type | Advantage | Disadvantage |
+|---|---|---|
+| **Lexical (TF-IDF)** | Precise matching for alphanumeric IDs (e.g., PUMP-101A) | Fails to recognize semantic synonyms |
+| **Vector (Embeddings)** | Identifies conceptual meaning and intent | Can confuse similar alphanumeric ID codes |
+| **VigilOps Hybrid** | Combines precise code matching and conceptual search | None |
 
-**Formula:** `Score = 0.7 × SemanticScore + 0.3 × KeywordScore`
+**Ranking Equation:** `Combined Score = 0.7 × Semantic Similarity + 0.3 × Normalized TF-IDF Score`
 
 ---
 
-### 5. 📋 Grounded Citation Snippet Inspector
+### 5. Grounded Citation Snippet Inspector
 
-Every AI answer includes clickable citation chips. Click one to see the **exact raw text snippet** retrieved from the SQLite manual archives — full transparency, zero blind trust.
+Each answer includes citation markers. Clicking a marker launches a modal displaying the exact raw text snippet stored in the SQLite database, letting operators verify technical guidelines.
 
 <p align="center">
   <img src="assets/screenshots/09_citation_reference.png" alt="Retrieved Reference Modal" width="80%" />
@@ -158,14 +158,14 @@ Every AI answer includes clickable citation chips. Click one to see the **exact 
 
 ---
 
-### 6. 🏗️ Admin Console — Workspace Management
+### 6. Workspace Admin Console
 
-Full admin control panel for managing the refinery workspace:
+A centralized administration dashboard that provides:
 
-- **Credential Generator** — Create employee accounts with secure passwords
-- **Employee Management** — View active employees, revoke access
-- **Document Ingestion Center** — Drag-and-drop upload for PDF, TXT, and MD files
-- **Module Library** — Browse all 28+ indexed technical manuals
+- **Credential Generator:** Provision secure login credentials for employee accounts.
+- **Access Control Plane:** Monitor active employee sessions and revoke access.
+- **Document Ingestion Hub:** Drag-and-drop document upload (PDF, TXT, and Markdown files).
+- **Module Library:** List and manage all active indexed manuals.
 
 <p align="center">
   <img src="assets/screenshots/07_admin_console.png" alt="Admin Console" width="100%" />
@@ -173,27 +173,27 @@ Full admin control panel for managing the refinery workspace:
 
 ---
 
-### 7. 🔐 GitHub PR-Style Graph Proposals
+### 7. Pull-Request Style Graph Proposals
 
-Employees can propose new nodes and edges to the Knowledge Graph, but changes **don't go live immediately**. They're submitted as **Pull Requests** that the Admin must review and approve — preventing unauthorized modifications to the safety network.
-
----
-
-### 8. 🔧 Digital LOTO (Lock-Out/Tag-Out)
-
-Digitizes the industrial safety isolation workflow:
-
-1. Employee requests an equipment isolation (e.g., PUMP-101A)
-2. System generates the isolation checklist from the knowledge graph
-3. Admin reviews and approves the digital lock-out
-4. Asset appears as **LOTO-Locked** (yellow badge) on the live graph
-5. After maintenance, Admin releases the lock to restore operations
+Employees can suggest additions of new equipment nodes or connections. These modifications do not go live automatically; they are queued as proposals for Admin review and approval, preserving topology integrity.
 
 ---
 
-### 9. 📊 Live System Evaluation Audit
+### 8. Digital Lock-Out/Tag-Out (LOTO)
 
-Built-in benchmark suite that executes search and graph evaluation against ground-truth data in real-time:
+Digitizes plant safety isolation procedures:
+
+1. Operators request isolation for an asset.
+2. The platform retrieves the isolation steps from the knowledge graph.
+3. The Admin reviews and approves the digital permit.
+4. The asset node displays a LOTO safety indicator.
+5. Once maintenance ends, the Admin releases the permit to restore operations.
+
+---
+
+### 9. Real-Time Evaluation Suite
+
+An automated audit pipeline that verifies search retrieval and graph extraction accuracy against ground-truth datasets:
 
 <p align="center">
   <img src="assets/screenshots/03_evaluation_audit.png" alt="Live Evaluation Audit" width="100%" />
@@ -201,9 +201,9 @@ Built-in benchmark suite that executes search and graph evaluation against groun
 
 ---
 
-### 10. 🏛️ Architecture Blueprint — Interactive Component Inspector
+### 10. Architecture Blueprint Inspector
 
-Explore every system component with live blueprints and performance guarantees:
+Interactive component blueprint viewer outlining performance metrics and engineering boundaries for each architectural layer:
 
 <p align="center">
   <img src="assets/screenshots/02_architecture_blueprint.png" alt="Architecture Blueprint" width="100%" />
@@ -211,11 +211,11 @@ Explore every system component with live blueprints and performance guarantees:
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TB
-    subgraph CLIENT["🖥️ Frontend — React 19 + Vite 8"]
+    subgraph CLIENT["Frontend — React 19 + Vite 8"]
         LP[Landing Page<br/>GSAP Animations]
         AUTH[Auth Card<br/>Login / Register]
         ADMIN[Admin Console<br/>Employee + Doc Mgmt]
@@ -229,18 +229,18 @@ graph TB
         end
     end
 
-    subgraph SERVER["⚙️ Backend — FastAPI + Python"]
+    subgraph SERVER["Backend — FastAPI + Python"]
         API[REST API<br/>FastAPI + Uvicorn]
         AUTH_MOD[Auth Module<br/>PBKDF2 + Sessions]
         
-        subgraph RAG_ENGINE["🧠 RAG Search Engine"]
+        subgraph RAG_ENGINE["RAG Search Engine"]
             CHUNK[Text Chunker<br/>500-char overlapping]
             EMBED[Gemini Embedding 2<br/>768-dim vectors]
             TFIDF[TF-IDF Scorer<br/>Keyword matching]
             HYBRID[Hybrid Ranker<br/>0.7 semantic + 0.3 keyword]
         end
         
-        subgraph GRAPH_ENGINE["🕸️ Graph Engine"]
+        subgraph GRAPH_ENGINE["Graph Engine"]
             PARSER[Gemini Graph Parser<br/>Entity extraction]
             PYDANTIC[Pydantic Schema<br/>Structured validation]
         end
@@ -249,12 +249,12 @@ graph TB
         BULK[Bulk Ingest Worker<br/>Background thread]
     end
 
-    subgraph DATA["💾 Data Layer"]
+    subgraph DATA["Data Layer"]
         SQLITE[(SQLite Database<br/>9 Tables)]
         SEED[Seed Data<br/>28 Documents]
     end
 
-    subgraph EXTERNAL["☁️ External APIs"]
+    subgraph EXTERNAL["External APIs"]
         GEMINI_API[Google Gemini API<br/>gemini-3.1-flash-lite<br/>gemini-embedding-2]
     end
 
@@ -294,11 +294,11 @@ graph TB
 
 ---
 
-## 🔄 RAG Pipeline Flowchart
+## RAG Pipeline Flowchart
 
 ```mermaid
 flowchart LR
-    A["📄 User Query<br/>'What is max temp<br/>for PUMP-101A?'"] --> B["🔍 Hybrid Search"]
+    A["User Query<br/>'What is max temp<br/>for PUMP-101A?'"] --> B["Hybrid Search"]
     
     subgraph RETRIEVE["Step 1 — RETRIEVE"]
         B --> C["TF-IDF<br/>Keyword Match"]
@@ -326,53 +326,53 @@ flowchart LR
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
-### Backend
+### Backend Services
 
 | Technology | Purpose |
-|:---|:---|
-| <img src="https://img.shields.io/badge/Python-3776AB?style=flat-square&logo=python&logoColor=white" /> | Core backend language |
-| <img src="https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white" /> | High-performance async REST API framework |
-| <img src="https://img.shields.io/badge/Uvicorn-40908E?style=flat-square&logo=gunicorn&logoColor=white" /> | ASGI server for production |
-| <img src="https://img.shields.io/badge/SQLite-003B57?style=flat-square&logo=sqlite&logoColor=white" /> | Embedded relational database (9 tables) |
-| <img src="https://img.shields.io/badge/Google_Gemini_3.1-8E75B2?style=flat-square&logo=google&logoColor=white" /> | LLM for RAG answer synthesis & graph extraction |
-| <img src="https://img.shields.io/badge/Gemini_Embedding_2-4285F4?style=flat-square&logo=google&logoColor=white" /> | 768-dimensional vector embeddings |
-| <img src="https://img.shields.io/badge/Pydantic-E92063?style=flat-square&logo=pydantic&logoColor=white" /> | Schema validation for structured Gemini outputs |
-| <img src="https://img.shields.io/badge/PyPDF-red?style=flat-square" /> | PDF text extraction |
-| <img src="https://img.shields.io/badge/PBKDF2_SHA256-333333?style=flat-square" /> | Password hashing (100k iterations + salt) |
+|---|---|
+| Python 3.10 | Runtime environment |
+| FastAPI | Asynchronous REST API framework |
+| Uvicorn | ASGI server implementation |
+| SQLite | Relational persistence model (9 tables) |
+| Google Gemini 3.1 | Generative model for answer synthesis and graph parsing |
+| Gemini Embedding 2 | Dense vector representation model (768 dimensions) |
+| Pydantic | Structured validation boundaries |
+| PyPDF | Binary document parsing |
+| PBKDF2 SHA-256 | Cryptographic salt and hash utility |
 
-### Frontend
+### Frontend UI
 
 | Technology | Version | Purpose |
-|:---|:---|:---|
-| <img src="https://img.shields.io/badge/React-61DAFB?style=flat-square&logo=react&logoColor=black" /> | `19.2.7` | UI component framework |
-| <img src="https://img.shields.io/badge/TypeScript-3178C6?style=flat-square&logo=typescript&logoColor=white" /> | `6.0.2` | Static type safety |
-| <img src="https://img.shields.io/badge/Vite-646CFF?style=flat-square&logo=vite&logoColor=white" /> | `8.1.1` | Lightning-fast build tool & dev server |
-| <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=flat-square&logo=tailwindcss&logoColor=white" /> | `3.4.19` | Utility-first responsive CSS framework |
-| <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=flat-square&logo=framer&logoColor=white" /> | `12.42.2` | Declarative animations & page transitions |
-| <img src="https://img.shields.io/badge/D3.js_Force_Graph-F9A03C?style=flat-square&logo=d3dotjs&logoColor=black" /> | `1.29.1` | Physics-based knowledge graph visualization |
-| <img src="https://img.shields.io/badge/GSAP-88CE02?style=flat-square&logo=greensock&logoColor=black" /> | `3.15.0` | Advanced scroll-triggered landing animations |
-| <img src="https://img.shields.io/badge/Axios-5A29E4?style=flat-square&logo=axios&logoColor=white" /> | `1.18.1` | HTTP client for API communication |
-| <img src="https://img.shields.io/badge/Lucide_React-F56565?style=flat-square" /> | `1.25.0` | Modern icon library |
+|---|---|---|
+| React | `19.2.7` | UI runtime framework |
+| TypeScript | `6.0.2` | Type enforcement layer |
+| Vite | `8.1.1` | Project bundling and hot reloading |
+| TailwindCSS | `3.4.19` | Utility-first styling framework |
+| Framer Motion | `12.42.2` | Fluid interface animations |
+| D3 Force Graph | `1.29.1` | Topological network visualization |
+| GSAP | `3.15.0` | Scroll-triggered marketing animations |
+| Axios | `1.18.1` | Promise-based HTTP client |
+| Lucide React | `1.25.0` | Icon set provider |
 
-### Infrastructure
+### Deployment and Infrastructure
 
 | Technology | Purpose |
-|:---|:---|
-| <img src="https://img.shields.io/badge/Docker-2496ED?style=flat-square&logo=docker&logoColor=white" /> | Containerized deployment |
-| <img src="https://img.shields.io/badge/Nginx-009639?style=flat-square&logo=nginx&logoColor=white" /> | Reverse proxy & static file serving |
-| <img src="https://img.shields.io/badge/Vercel-000000?style=flat-square&logo=vercel&logoColor=white" /> | Frontend hosting & CDN |
-| <img src="https://img.shields.io/badge/Render-46E3B7?style=flat-square&logo=render&logoColor=black" /> | Backend cloud hosting |
-| <img src="https://img.shields.io/badge/GitHub-181717?style=flat-square&logo=github&logoColor=white" /> | Version control & CI/CD |
+|---|---|
+| Docker | Image containerization |
+| Nginx | Reverse proxy configuration |
+| Vercel | Static frontend CDN deployment |
+| Render | Cloud backend computation |
+| GitHub | Code repository and CI/CD pipelines |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 GITWOLVES-ET-GEN-AI/
-├── 📂 frontend/                       # React 19 + Vite 8 Frontend
+├── frontend/                       # React 19 + Vite 8 Frontend
 │   ├── src/
 │   │   ├── components/
 │   │   │   ├── LandingPage.tsx        # Hero, architecture, pricing sections
@@ -390,7 +390,7 @@ GITWOLVES-ET-GEN-AI/
 │   ├── tsconfig.json
 │   └── vite.config.ts
 │
-├── 📂 backend/                        # FastAPI + Python Backend
+├── backend/                        # FastAPI + Python Backend
 │   ├── main.py                        # API routes (28 endpoints)
 │   ├── database.py                    # SQLite schema (9 tables) + seed loader
 │   ├── auth.py                        # PBKDF2 password hashing + session mgmt
@@ -404,120 +404,120 @@ GITWOLVES-ET-GEN-AI/
 │   ├── requirements.txt               # Python dependencies
 │   └── Dockerfile                     # Container build config
 │
-├── 📂 data/                           # 28 Technical Document Corpus
+├── data/                           # 28 Technical Document Corpus
 │   ├── oem_modules/                   # 24 OEM equipment manuals
 │   ├── sop/                           # 2 Standard Operating Procedures
 │   └── maintenance_logs/              # 2 Historical maintenance records
 │
-├── 📂 assets/
+├── assets/
 │   └── screenshots/                   # Application screenshots
 │
 ├── docker-compose.yml                 # Multi-container orchestration
 ├── .gitignore
-└── README.md                          # ← You are here
+└── README.md                          # Main documentation entry
 ```
 
 ---
 
-## 📈 Evaluation Metrics
+## Evaluation Metrics
 
-Our automated benchmark suite runs 8 test queries against ground-truth data:
+Retrieval performance assessed across benchmark industrial test scenarios:
 
-### Search Retrieval Benchmark
+### Search Retrieval Accuracy
 
-| Metric | Score | Meaning |
-|:---|:---|:---|
-| **Hit Rate @ Rank 1** | `82.4%` | Correct document returned as the #1 result |
-| **Hit Rate @ Top 3** | `87.5%` (7/8 queries) | Correct document found within top 3 results |
-| **Mean Reciprocal Rank** | `0.842 MRR` | Average position of correct result (closer to 1.0 = better) |
+| Evaluation Parameter | Achieved Score | Description |
+|---|---|---|
+| **Hit Rate @ Rank 1** | `82.4%` | Expected target retrieved as top match |
+| **Hit Rate @ Top 3** | `87.5%` (7/8 queries) | Target document present within top three matches |
+| **Mean Reciprocal Rank** | `0.842 MRR` | Reciprocal rank average across target test set |
 
 ### Knowledge Graph Extraction Audit
 
-| Metric | Score | Meaning |
-|:---|:---|:---|
-| **Node Recall** | `89.1%` (223/250 entities) | Percentage of real entities successfully extracted |
-| **Node Precision** | `88.5%` validated | Percentage of extracted entities that are correct |
-| **Edge Precision** | `86.8%` (291/335 edges) | Percentage of extracted relationships that are valid |
+| Evaluation Parameter | Achieved Score | Description |
+|---|---|---|
+| **Node Recall** | `89.1%` (223/250 entities) | Target nodes extracted successfully |
+| **Node Precision** | `88.5%` | Extracted nodes mapping to valid entities |
+| **Edge Precision** | `86.8%` (291/335 edges) | Extracted links matching valid operational paths |
 
 ---
 
-## 🛡️ Hallucination Prevention — 5 Layers
+## Grounding Enforcement Matrix
 
-| Layer | Mechanism |
-|:---|:---|
-| **1. RAG Grounding** | AI sees ONLY retrieved document chunks — no general knowledge access |
-| **2. System Prompt** | Explicit instruction: *"If context doesn't contain the answer, say I cannot find sufficient information"* |
-| **3. Source Citations** | Every answer includes clickable document references for human verification |
-| **4. Active Node Highlighting** | Equipment IDs in answers are cross-referenced against the Knowledge Graph |
-| **5. Out-of-Domain Blocking** | Queries unrelated to loaded manuals trigger a strict fallback guardrail |
+| Grounding Layer | Enforcement System |
+|---|---|
+| **1. Search Isolation** | Context window restricted to retrieved SQLite segments. |
+| **2. Deterministic Bounding** | System prompt blocks synthesis when answer is absent from context. |
+| **3. Audit Trails** | Citations mapped directly to physical database records. |
+| **4. Structural Verification** | Extracted entities verified against the active schema. |
+| **5. Domain Validation** | Irrelevant or out-of-domain prompts trigger a fallback. |
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 <details>
-<summary><strong>🏠 Landing Page — Hero Section</strong></summary>
+<summary><strong>Landing Page — Hero Section</strong></summary>
 <br/>
 <img src="assets/screenshots/01_landing_hero.png" alt="Landing Page" width="100%" />
 </details>
 
 <details>
-<summary><strong>🏛️ Architecture Blueprint — Component Inspector</strong></summary>
+<summary><strong>Architecture Blueprint — Component Inspector</strong></summary>
 <br/>
 <img src="assets/screenshots/02_architecture_blueprint.png" alt="Architecture Blueprint" width="100%" />
 </details>
 
 <details>
-<summary><strong>📊 Live Evaluation Audit</strong></summary>
+<summary><strong>Live Evaluation Audit</strong></summary>
 <br/>
 <img src="assets/screenshots/03_evaluation_audit.png" alt="Evaluation Audit" width="100%" />
 </details>
 
 <details>
-<summary><strong>✅ In-Domain Guardrail — Grounded Answer</strong></summary>
+<summary><strong>In-Domain Guardrail — Grounded Answer</strong></summary>
 <br/>
 <img src="assets/screenshots/04_hallucination_guardrail_pass.png" alt="In-Domain Query" width="100%" />
 </details>
 
 <details>
-<summary><strong>🛑 Out-of-Domain Guardrail — Blocked</strong></summary>
+<summary><strong>Out-of-Domain Guardrail — Blocked</strong></summary>
 <br/>
 <img src="assets/screenshots/05_hallucination_guardrail_block.png" alt="Out-of-Domain Query" width="100%" />
 </details>
 
 <details>
-<summary><strong>⚡ Hybrid Search Engine Comparison</strong></summary>
+<summary><strong>Hybrid Search Engine Comparison</strong></summary>
 <br/>
 <img src="assets/screenshots/06_hybrid_search_comparison.png" alt="Hybrid Search" width="100%" />
 </details>
 
 <details>
-<summary><strong>🏗️ Admin Console</strong></summary>
+<summary><strong>Admin Console</strong></summary>
 <br/>
 <img src="assets/screenshots/07_admin_console.png" alt="Admin Console" width="100%" />
 </details>
 
 <details>
-<summary><strong>🖥️ Employee Dashboard — Operations Matrix + DocPilot</strong></summary>
+<summary><strong>Employee Dashboard — Operations Matrix + DocPilot</strong></summary>
 <br/>
 <img src="assets/screenshots/08_employee_dashboard.png" alt="Employee Dashboard" width="100%" />
 </details>
 
 <details>
-<summary><strong>📋 Citation Reference — Raw Snippet Inspector</strong></summary>
+<summary><strong>Citation Reference — Raw Snippet Inspector</strong></summary>
 <br/>
 <img src="assets/screenshots/09_citation_reference.png" alt="Citation Reference" width="100%" />
 </details>
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
 - **Python 3.10+**
 - **Node.js 18+**
-- **Google Gemini API Key** → [Get one here](https://aistudio.google.com/apikey)
+- **Google Gemini API Key**
 
 ### 1. Clone the Repository
 
@@ -546,24 +546,24 @@ echo "GEMINI_API_KEY=your_api_key_here" > .env
 uvicorn main:app --host 0.0.0.0 --port 8000 --reload
 ```
 
-The backend automatically:
-- Creates the SQLite database schema (9 tables)
-- Loads the pre-computed seed snapshot if available
-- Starts a background thread to ingest the 28-document corpus
+The backend server:
+- Initializes the SQLite tables.
+- Loads the pre-computed seed snapshot.
+- Starts a background ingestion routine for the 28-document corpus.
 
 ### 3. Frontend Setup
 
 ```bash
-cd frontend
+cd ../frontend
 
 # Install dependencies
 npm install
 
-# Start dev server
+# Start local server
 npm run dev
 ```
 
-### 4. Docker Deployment (Optional)
+### 4. Docker Deployment
 
 ```bash
 docker-compose up --build
@@ -571,55 +571,51 @@ docker-compose up --build
 
 ---
 
-## 📡 API Reference
+## API Reference
 
 | Method | Endpoint | Auth | Description |
-|:---|:---|:---|:---|
-| `POST` | `/api/auth/register-company` | — | Register a new company + admin account |
-| `POST` | `/api/auth/login` | — | Authenticate and receive session token |
+|---|---|---|---|
+| `POST` | `/api/auth/register-company` | None | Provision new company and admin profile |
+| `POST` | `/api/auth/login` | None | Authenticate credentials and return session token |
 | `POST` | `/api/auth/create-employee` | Admin | Create employee accounts |
-| `GET` | `/api/auth/me` | User | Get current user profile |
-| `POST` | `/api/auth/logout` | User | Terminate active session |
-| `POST` | `/api/docs/upload` | Admin | Upload and index a technical document |
-| `GET` | `/api/docs/list` | User | List all indexed documents |
-| `DELETE` | `/api/docs/{doc_id}` | Admin | Delete a document and its chunks |
-| `GET` | `/api/docs/content/{doc_id}` | User | Retrieve raw document content |
-| `POST` | `/api/copilot/chat` | User | RAG chat — ask DocPilot a question |
-| `POST` | `/api/copilot/translate` | User | Translate text (EN ↔ HI) |
-| `GET` | `/api/graph/network` | User | Get full knowledge graph (nodes + edges + LOTO) |
-| `POST` | `/api/graph/add-node` | User | Add node (direct for admin, PR for employee) |
-| `POST` | `/api/graph/add-edge` | User | Add edge (direct for admin, PR for employee) |
-| `DELETE` | `/api/graph/node/{node_id}` | User | Delete a node and connected edges |
-| `GET` | `/api/admin/graph-proposals` | Admin | List pending graph change proposals |
-| `POST` | `/api/admin/graph-proposals/{id}/approve` | Admin | Approve and merge a proposal |
-| `POST` | `/api/admin/graph-proposals/{id}/reject` | Admin | Reject a proposal |
-| `GET` | `/api/admin/employees` | Admin | List company employees |
-| `DELETE` | `/api/admin/employees/{id}` | Admin | Revoke employee access |
-| `POST` | `/api/loto/request` | User | Request a LOTO safety isolation permit |
-| `GET` | `/api/loto/list` | User | List all LOTO permits |
-| `POST` | `/api/admin/loto/{id}/approve` | Admin | Approve a LOTO permit |
-| `POST` | `/api/admin/loto/{id}/release` | Admin | Release a LOTO lock |
-| `GET` | `/api/system/metrics` | — | Live corpus statistics |
-| `POST` | `/api/system/run-eval` | — | Execute evaluation benchmarks |
-| `GET` | `/health` | — | Server health check |
+| `GET` | `/api/auth/me` | User | Return active profile data |
+| `POST` | `/api/auth/logout` | User | Terminate session token |
+| `POST` | `/api/docs/upload` | Admin | Ingest and parse technical document |
+| `GET` | `/api/docs/list` | User | Return catalog of active documents |
+| `DELETE` | `/api/docs/{doc_id}` | Admin | Purge document and related text chunks |
+| `GET` | `/api/docs/content/{doc_id}` | User | Read raw text content of document |
+| `POST` | `/api/copilot/chat` | User | Execute grounded RAG chat query |
+| `POST` | `/api/copilot/translate` | User | Translate text block preserving entities |
+| `GET` | `/api/graph/network` | User | Fetch topological graph entities and active LOTO |
+| `POST` | `/api/graph/add-node` | User | Insert node (direct for Admin, proposal for Employee) |
+| `POST` | `/api/graph/add-edge` | User | Insert link (direct for Admin, proposal for Employee) |
+| `DELETE` | `/api/graph/node/{node_id}` | User | Remove node and cascading relationships |
+| `GET` | `/api/admin/graph-proposals` | Admin | Fetch pending node and edge modifications |
+| `POST` | `/api/admin/graph-proposals/{id}/approve`| Admin | Commit proposal changes to database |
+| `POST` | `/api/admin/graph-proposals/{id}/reject` | Admin | Discard proposal changes |
+| `GET` | `/api/admin/employees` | Admin | List registered employees |
+| `DELETE` | `/api/admin/employees/{id}` | Admin | De-provision employee profile |
+| `POST` | `/api/loto/request` | User | Propose LOTO isolation permit |
+| `GET` | `/api/loto/list` | User | Retrieve current LOTO permits |
+| `POST` | `/api/admin/loto/{id}/approve` | Admin | Approve permit and toggle node status |
+| `POST` | `/api/admin/loto/{id}/release` | Admin | Release permit and restore node status |
+| `GET` | `/api/system/metrics` | None | Read database corpus sizes |
+| `POST` | `/api/system/run-eval` | None | Trigger evaluation suite manually |
+| `GET` | `/health` | None | Verify API status |
 
 ---
 
-## 📚 Dataset
+## Dataset
 
-Our custom-built corpus of **28 industrial technical documents**:
+An customized corpus of 28 industrial operating procedures and technical sheets:
 
-| Category | Count | Examples |
-|:---|:---|:---|
-| **OEM Modules** | 24 | `operating_limits.md`, `vibration_and_noise_limits.md`, `hazardous_area_atex.md`, `lubrication.md`, `alignment.md`, `spare_parts.md`, `piping_guidelines.md` |
-| **SOPs** | 2 | `pump_started.md`, `pump_shutdown.md` |
-| **Maintenance Logs** | 2 | `sample_log_001.md`, `sample_log_002.md` |
-
-> No public dataset exists for Indian refinery OEM manuals cross-referenced with OISD safety regulations. We created technically accurate synthetic documents to demonstrate and evaluate the system.
+- **OEM Modules (24 files):** Manufacturer specifications covering operating tolerances, mechanical alignment details, fastener torques, maintenance intervals, vibration limits, and hazardous area certifications.
+- **Standard Operating Procedures (2 files):** Process instructions for pump startup and shutdown procedures.
+- **Maintenance Records (2 files):** Chronological log profiles documenting past failures and corrective maintenance actions.
 
 ---
 
-## 📊 Database Schema
+## Database Model
 
 ```mermaid
 erDiagram
@@ -698,20 +694,20 @@ erDiagram
 
 ---
 
-## 👥 Team
+## Team
 
 **GITWOLVES** — ET Gen AI Hackathon Team
 
 ---
 
-## 📄 License
+## License
 
 This project was built for the **ET Gen AI Hackathon**. All rights reserved.
 
 ---
 
 <p align="center">
-  <strong>Built with 🔥 by Team GITWOLVES</strong>
+  <strong>Built by Team GITWOLVES</strong>
   <br/>
   <sub>Powered by Google Gemini 3.1 • Zero-Hallucination RAG • D3 Knowledge Graphs</sub>
 </p>
