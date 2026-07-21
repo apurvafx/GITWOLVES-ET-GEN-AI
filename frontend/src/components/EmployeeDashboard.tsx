@@ -21,8 +21,34 @@ import {
   CheckCircle2,
   AlertTriangle,
   Languages,
-  RefreshCw
+  RefreshCw,
+  Play,
+  Pause,
+  TrendingUp,
+  Gauge
 } from 'lucide-react';
+
+const INCIDENT_TIMELINES = [
+  {
+    id: "inc_01",
+    title: "PUMP-101A Bearing Overheating Failure",
+    steps: [
+      { time: "0s", nodeId: "PUMP-101A", description: "PUMP-101A vibration spikes, causing high friction and bearing overheat." },
+      { time: "15s", nodeId: "VALVE-102", description: "Isolation safety VALVE-102 fails to respond to automatic shut-off signal." },
+      { time: "35s", nodeId: "MCC-P101", description: "Downstream motor control MCC-P101 trips breaker to prevent electrical fire." },
+      { time: "55s", nodeId: "SOP-OPS-12", description: "Emergency shutdown procedure SOP-OPS-12 is manually initiated by operator." }
+    ]
+  },
+  {
+    id: "inc_02",
+    title: "VALVE-102 Gas Seal Leakage",
+    steps: [
+      { time: "0s", nodeId: "VALVE-102", description: "VALVE-102 seal pressure drops, leaking high-pressure natural gas." },
+      { time: "20s", nodeId: "OISD-GDN-115", description: "Gas level violates OISD-GDN-115 safety threshold in ATEX Zone 1." },
+      { time: "45s", nodeId: "PUMP-101A", description: "Refinery board isolates PUMP-101A feed stream to clear gas pockets safely." }
+    ]
+  }
+];
 
 export const EmployeeDashboard: React.FC = () => {
   const { logout, companyId } = useAuth();
@@ -44,6 +70,11 @@ export const EmployeeDashboard: React.FC = () => {
   const [translatingManual, setTranslatingManual] = useState(false);
   const [showManualHindi, setShowManualHindi] = useState(false);
   const [fetchingManual, setFetchingManual] = useState(false);
+
+  // Incident propagation visualizer (Step 6)
+  const [selectedIncidentId, setSelectedIncidentId] = useState<string>('');
+  const [timelineIndex, setTimelineIndex] = useState<number>(0);
+  const [isTimelinePlaying, setIsTimelinePlaying] = useState<boolean>(false);
 
   // Graph Editor Modal State (Step 2)
   const [showGraphEditor, setShowGraphEditor] = useState(false);
@@ -99,6 +130,35 @@ export const EmployeeDashboard: React.FC = () => {
       setTranslatingManual(false);
     }
   };
+
+  // Playback timer for incident timeline visualizer (Step 6)
+  useEffect(() => {
+    let timer: any = null;
+    if (isTimelinePlaying && selectedIncidentId) {
+      const activeTimeline = INCIDENT_TIMELINES.find(t => t.id === selectedIncidentId);
+      if (activeTimeline) {
+        timer = setInterval(() => {
+          setTimelineIndex(prev => {
+            if (prev >= activeTimeline.steps.length - 1) {
+              setIsTimelinePlaying(false);
+              return prev;
+            }
+            return prev + 1;
+          });
+        }, 3200);
+      }
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [isTimelinePlaying, selectedIncidentId]);
+
+  const activePropagationNodes = useMemo(() => {
+    if (!selectedIncidentId) return [];
+    const activeTimeline = INCIDENT_TIMELINES.find(t => t.id === selectedIncidentId);
+    if (!activeTimeline) return [];
+    return activeTimeline.steps.slice(0, timelineIndex + 1).map(s => s.nodeId);
+  }, [selectedIncidentId, timelineIndex]);
 
   const fetchData = async () => {
     try {
@@ -336,14 +396,109 @@ export const EmployeeDashboard: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex-1 min-h-0 relative rounded-2xl overflow-hidden border border-stone-300 bg-stone-950">
+            <div className="h-[52%] min-h-0 relative rounded-2xl overflow-hidden border border-stone-300 bg-stone-950">
               <ForceGraph
                 nodes={filteredNodes}
                 edges={filteredEdges}
                 focusedNodeId={focusedNodeId}
                 theme="dark"
                 onNodeClick={(id) => handleNodeFocus(id)}
+                activePropagationNodes={activePropagationNodes}
               />
+            </div>
+
+            {/* Step 6: Incident Root-Cause Fault Propagation Timeline Visualizer */}
+            <div className="flex-1 min-h-0 border border-stone-300 rounded-2xl bg-white p-4 shadow-inner flex flex-col justify-between font-sans">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <TrendingUp className="text-red-500" size={16} />
+                    <h3 className="font-extrabold text-[11px] font-display uppercase tracking-wider text-stone-950">
+                      Incident Fault Propagation
+                    </h3>
+                  </div>
+                  <select
+                    value={selectedIncidentId}
+                    onChange={(e) => {
+                      setSelectedIncidentId(e.target.value);
+                      setTimelineIndex(0);
+                      setIsTimelinePlaying(false);
+                    }}
+                    className="px-2 py-1 rounded-full border border-stone-300 bg-[#f0f0ed] text-[10px] font-mono font-bold text-stone-800 focus:outline-none focus:ring-1 focus:ring-red-500"
+                  >
+                    <option value="">-- Select Incident --</option>
+                    {INCIDENT_TIMELINES.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.title}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {!selectedIncidentId ? (
+                  <p className="text-[10px] text-stone-500 italic py-3 text-center">
+                    Select a refinery incident failure above to track fault propagation.
+                  </p>
+                ) : (
+                  (() => {
+                    const activeTimeline = INCIDENT_TIMELINES.find(t => t.id === selectedIncidentId);
+                    if (!activeTimeline) return null;
+                    const step = activeTimeline.steps[timelineIndex];
+
+                    return (
+                      <div className="space-y-2.5">
+                        {/* Playback Controls & Slider */}
+                        <div className="flex items-center gap-3 bg-stone-100 p-2.5 rounded-2xl border border-stone-200">
+                          <button
+                            type="button"
+                            onClick={() => setIsTimelinePlaying(!isTimelinePlaying)}
+                            className="p-2 rounded-full bg-slate-950 hover:bg-slate-800 text-lime-400 flex items-center justify-center transition-all active:scale-95 shadow"
+                          >
+                            {isTimelinePlaying ? <Pause size={12} /> : <Play size={12} />}
+                          </button>
+
+                          <div className="flex-1 flex flex-col gap-1.5">
+                            <input
+                              type="range"
+                              min="0"
+                              max={activeTimeline.steps.length - 1}
+                              value={timelineIndex}
+                              onChange={(e) => {
+                                setTimelineIndex(parseInt(e.target.value));
+                                setIsTimelinePlaying(false);
+                              }}
+                              className="w-full h-1 bg-stone-300 rounded-lg appearance-none cursor-pointer accent-red-500"
+                            />
+                            <div className="flex justify-between text-[9px] font-mono font-bold text-stone-600">
+                              <span>Start</span>
+                              <span>Step {timelineIndex + 1} of {activeTimeline.steps.length}</span>
+                              <span>End</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Step Description Card */}
+                        <div className="p-3.5 rounded-2xl bg-red-50/50 border border-red-200/60 text-stone-900 space-y-1.5">
+                          <div className="flex items-center justify-between">
+                            <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-red-100 text-red-700 border border-red-300">
+                              T = {step.time}
+                            </span>
+                            <button
+                              onClick={() => handleNodeFocus(step.nodeId)}
+                              className="text-[9px] font-mono font-black text-sky-600 hover:text-sky-800 uppercase"
+                            >
+                              Focus {step.nodeId} &rarr;
+                            </button>
+                          </div>
+                          <p className="text-[11px] leading-relaxed text-stone-800 font-medium">
+                            {step.description}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })()
+                )}
+              </div>
             </div>
           </div>
 

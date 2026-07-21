@@ -19,6 +19,7 @@ interface ForceGraphProps {
   focusedNodeId: string | null;
   theme?: 'light' | 'dark';
   onNodeClick?: (nodeId: string) => void;
+  activePropagationNodes?: string[];
 }
 
 export const ForceGraph: React.FC<ForceGraphProps> = ({
@@ -26,6 +27,7 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
   edges,
   focusedNodeId,
   onNodeClick,
+  activePropagationNodes = [],
 }) => {
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -109,28 +111,39 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
     const r = 8;
     const isFocused = node.id === focusedNodeId;
     const isHovered = hoveredNode && hoveredNode.id === node.id;
+    const isActivePropagation = activePropagationNodes.includes(node.id);
 
-    // 1. Outer Glow Aura
+    // 1. Outer Glow Aura (Flashing red for active fault propagation nodes)
     ctx.beginPath();
     ctx.arc(node.x, node.y, r + (isFocused || isHovered ? 8 : 4), 0, 2 * Math.PI, false);
-    ctx.fillStyle = isFocused ? 'rgba(196, 241, 36, 0.4)' : colorGlow;
+    if (isActivePropagation) {
+      const pulseSpeed = Math.sin(Date.now() / 120) * 0.35 + 0.65;
+      ctx.fillStyle = `rgba(239, 68, 68, ${0.45 * pulseSpeed})`;
+    } else {
+      ctx.fillStyle = isFocused ? 'rgba(196, 241, 36, 0.4)' : colorGlow;
+    }
     ctx.fill();
 
-    // 2. Focused Ring
-    if (isFocused || isHovered) {
+    // 2. Focused / Propagation Ring
+    if (isFocused || isHovered || isActivePropagation) {
       ctx.beginPath();
       ctx.arc(node.x, node.y, r + 10, 0, 2 * Math.PI, false);
-      ctx.strokeStyle = isFocused ? '#c4f124' : colorCore;
-      ctx.lineWidth = 1.5 / globalScale;
+      if (isActivePropagation) {
+        ctx.strokeStyle = '#ef4444';
+        ctx.lineWidth = 2.5 / globalScale;
+      } else {
+        ctx.strokeStyle = isFocused ? '#c4f124' : colorCore;
+        ctx.lineWidth = 1.5 / globalScale;
+      }
       ctx.stroke();
     }
 
-    // 3. Central Node Circle
+    // 3. Central Node Circle (Changes to Red Core if active propagation)
     ctx.beginPath();
     ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
-    ctx.fillStyle = colorCore;
+    ctx.fillStyle = isActivePropagation ? '#ef4444' : colorCore;
     ctx.fill();
-    ctx.strokeStyle = isFocused ? '#c4f124' : '#050508';
+    ctx.strokeStyle = isFocused || isActivePropagation ? '#ef4444' : '#050508';
     ctx.lineWidth = 1.5;
     ctx.stroke();
 
