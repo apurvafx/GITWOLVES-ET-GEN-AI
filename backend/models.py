@@ -25,3 +25,8 @@ class AddEdgeRequest(BaseModel):
     source_id: str = Field(..., min_length=1)
     target_id: str = Field(..., min_length=1)
     rel_type: str = Field(default="CONNECTED_TO")
+
+class TranslateRequest(BaseModel):
+    text: str = Field(..., min_length=1)
+    target_lang: str = Field(default="Hindi")
+

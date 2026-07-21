@@ -19,7 +19,9 @@ import {
   GitFork,
   X,
   CheckCircle2,
-  AlertTriangle
+  AlertTriangle,
+  Languages,
+  RefreshCw
 } from 'lucide-react';
 
 export const EmployeeDashboard: React.FC = () => {
@@ -35,9 +37,12 @@ export const EmployeeDashboard: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [nodeLimit, setNodeLimit] = useState<'top' | 'all'>('top');
   
-  // Documents list
+  // Documents list & Multilingual Translation (Step 5)
   const [documents, setDocuments] = useState<any[]>([]);
   const [viewingManual, setViewingManual] = useState<{ filename: string; content: string } | null>(null);
+  const [translatedManualText, setTranslatedManualText] = useState<string | null>(null);
+  const [translatingManual, setTranslatingManual] = useState(false);
+  const [showManualHindi, setShowManualHindi] = useState(false);
   const [fetchingManual, setFetchingManual] = useState(false);
 
   // Graph Editor Modal State (Step 2)
@@ -57,6 +62,8 @@ export const EmployeeDashboard: React.FC = () => {
 
   const handleManualClick = async (docId: string) => {
     setFetchingManual(true);
+    setTranslatedManualText(null);
+    setShowManualHindi(false);
     try {
       const response = await api.get(`/api/docs/content/${docId}`);
       setViewingManual(response.data);
@@ -64,6 +71,32 @@ export const EmployeeDashboard: React.FC = () => {
       console.error("Failed to load manual content:", err);
     } finally {
       setFetchingManual(false);
+    }
+  };
+
+  const handleTranslateManualText = async () => {
+    if (!viewingManual) return;
+    if (showManualHindi) {
+      setShowManualHindi(false);
+      return;
+    }
+    if (translatedManualText) {
+      setShowManualHindi(true);
+      return;
+    }
+
+    setTranslatingManual(true);
+    try {
+      const response = await api.post('/api/copilot/translate', {
+        text: viewingManual.content,
+        target_lang: 'Hindi'
+      });
+      setTranslatedManualText(response.data.translated_text);
+      setShowManualHindi(true);
+    } catch (err) {
+      console.error("Manual translation error:", err);
+    } finally {
+      setTranslatingManual(false);
     }
   };
 
@@ -494,20 +527,42 @@ export const EmployeeDashboard: React.FC = () => {
       {viewingManual && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div className="bg-[#f0f0ed] border border-stone-300 rounded-3xl w-full max-w-2xl p-7 relative max-h-[85vh] flex flex-col shadow-2xl">
-            <h3 className="text-base font-bold font-display mb-2 flex items-center gap-2 text-stone-950">
-              <FileText className="text-stone-950" size={18} />
-              Refinery Manual: <span className="text-stone-950 font-mono">{viewingManual.filename}</span>
-            </h3>
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="text-base font-bold font-display flex items-center gap-2 text-stone-950">
+                <FileText className="text-stone-950" size={18} />
+                Refinery Manual: <span className="text-stone-950 font-mono">{viewingManual.filename}</span>
+              </h3>
+              <button
+                type="button"
+                onClick={handleTranslateManualText}
+                disabled={translatingManual}
+                className={`px-3 py-1.5 rounded-full text-xs font-mono font-bold transition-all flex items-center gap-1.5 ${
+                  showManualHindi
+                    ? 'bg-slate-950 text-lime-400 shadow-md'
+                    : 'bg-stone-300 hover:bg-stone-400 text-stone-950 border border-stone-400'
+                }`}
+              >
+                {translatingManual ? (
+                  <RefreshCw size={13} className="animate-spin" />
+                ) : (
+                  <Languages size={13} />
+                )}
+                <span>{showManualHindi ? 'Show English' : 'Translate to Hindi (हिंदी)'}</span>
+              </button>
+            </div>
             <p className="text-xs text-stone-500 font-light mb-4">
-              Browsing raw document guidelines:
+              Browsing raw document guidelines ({showManualHindi ? 'Hindi Translation' : 'Original English'}):
             </p>
             <div className="flex-1 overflow-y-auto p-5 rounded-2xl bg-white border border-stone-300 font-sans text-xs whitespace-pre-wrap text-stone-800 leading-relaxed">
-              {viewingManual.content}
+              {showManualHindi && translatedManualText ? translatedManualText : viewingManual.content}
             </div>
             <div className="mt-4 text-right">
               <button
                 type="button"
-                onClick={() => setViewingManual(null)}
+                onClick={() => {
+                  setViewingManual(null);
+                  setShowManualHindi(false);
+                }}
                 className="px-6 py-3 text-xs font-mono font-bold uppercase tracking-wider rounded-full bg-slate-950 text-lime-400 shadow-lg active:scale-95 transition-all"
               >
                 Close Document

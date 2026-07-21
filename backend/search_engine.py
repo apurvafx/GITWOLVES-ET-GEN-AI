@@ -210,7 +210,8 @@ def hybrid_search(query: str, company_id: str, top_k: int = 3) -> list[dict]:
 
 def generate_rag_answer(query: str, retrieved_chunks: list[dict], company_id: str) -> dict:
     """
-    Synthesizes an answer using the retrieved chunks and gemini-3.5-flash.
+    Synthesizes an answer using the retrieved chunks and gemini model.
+    Supports English, Hindi, and Hinglish (Roman Hindi) queries seamlessly.
     Returns: {"answer": str, "citations": list[str], "active_nodes": list[str]}
     """
     if not api_key:
@@ -231,14 +232,19 @@ def generate_rag_answer(query: str, retrieved_chunks: list[dict], company_id: st
     
     context = "\n".join(context_blocks)
     
-    # 2. System Instructions and Prompt
+    # 2. System Instructions and Multilingual Prompt
     prompt = f"""
-    You are an expert industrial plant safety and operations assistant.
-    Answer the user's query using ONLY the provided document context below. 
-    If the context does not contain the answer, reply: "I cannot find sufficient information in the loaded manuals."
+    You are an expert industrial plant safety and operations assistant named DocPilot.
+    Answer the user's query using ONLY the provided document context below.
+    If the context does not contain the answer, reply: "I cannot find sufficient information in the loaded manuals." / "लोड किए गए मैनुअल में पर्याप्त जानकारी नहीं मिली।"
     Do not invent or extrapolate safety values, limits, or parameters.
     
-    Format your response in clean markdown. When referring to equipment tags, valves, procedures, or standards, use their exact normalized IDs in uppercase (e.g. PUMP-101A, VALVE-102, OISD-GDN-115) to help the user locate them.
+    LANGUAGE RULE:
+    - Detect the language of the user query (English, Devanagari Hindi, or Hinglish/Roman Hindi like "PUMP-101A ka max pressure kitna hai?").
+    - Respond in the SAME language as the query (English, Hindi, or Hinglish).
+    - CRITICAL: Keep all technical equipment tags, valve IDs, procedure codes, and standards in exact UPPERCASE English characters (e.g. PUMP-101A, VALVE-102, OISD-GDN-115, SOP-OPS-12) so entity grounding links remain functional.
+    
+    Format your response in clean, easy-to-read markdown.
     
     Context:
     {context}
@@ -281,3 +287,26 @@ def generate_rag_answer(query: str, retrieved_chunks: list[dict], company_id: st
             "active_nodes": [],
             "retrieved_chunks": []
         }
+
+def translate_text(text: str, target_lang: str = "Hindi") -> str:
+    """
+    Translates text or manual content into Hindi or English while preserving equipment IDs.
+    """
+    if not api_key:
+        return f"[Offline] Translation to {target_lang} unavailable without Gemini API key."
+        
+    prompt = f"""
+    Translate the following technical industrial plant text into {target_lang}.
+    Keep all technical equipment IDs, valve tags, and SOP codes (e.g. PUMP-101A, VALVE-102, OISD-GDN-115) EXACTLY in uppercase English letters.
+    Maintain clean markdown formatting.
+    
+    Text to translate:
+    {text}
+    """
+    try:
+        model = genai.GenerativeModel("gemini-3.1-flash-lite")
+        response = model.generate_content(prompt)
+        return response.text
+    except Exception as e:
+        return f"Translation error: {e}"
+

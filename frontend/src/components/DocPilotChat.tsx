@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
-import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity, Mic, MicOff, Volume2, VolumeX, Download, FileText } from 'lucide-react';
+import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity, Mic, MicOff, Volume2, VolumeX, Download, FileText, Languages, RefreshCw } from 'lucide-react';
 
 interface Message {
   sender: 'user' | 'pilot';
@@ -20,7 +20,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   const [messages, setMessages] = useState<Message[]>([
     {
       sender: 'pilot',
-      text: "Hello! I am DocPilot, your technical operations assistant. Ask me questions about company manuals, safety compliance, or incident logs.",
+      text: "Hello! I am DocPilot, your technical operations assistant. Ask me questions about company manuals, safety compliance, or incident logs in English, Hindi (हिंदी), or Hinglish.",
     },
   ]);
   const [loading, setLoading] = useState(false);
@@ -30,6 +30,11 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   const [isListening, setIsListening] = useState(false);
   const [speakingIndex, setSpeakingIndex] = useState<number | null>(null);
   const recognitionRef = useRef<any>(null);
+
+  // Multilingual Translation State (Step 5)
+  const [translatedTexts, setTranslatedTexts] = useState<{ [key: number]: string }>({});
+  const [translatingIndex, setTranslatingIndex] = useState<number | null>(null);
+  const [showHindi, setShowHindi] = useState<{ [key: number]: boolean }>({});
 
   const chatEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -114,7 +119,37 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Step 4: 1-Click Shift Handover Report Exporter
+  // 1-Click Translation Handler (Step 5)
+  const handleTranslateMessage = async (text: string, index: number) => {
+    if (showHindi[index]) {
+      // Toggle back to English/Original
+      setShowHindi(prev => ({ ...prev, [index]: false }));
+      return;
+    }
+
+    if (translatedTexts[index]) {
+      // Already cached
+      setShowHindi(prev => ({ ...prev, [index]: true }));
+      return;
+    }
+
+    setTranslatingIndex(index);
+    try {
+      const response = await api.post('/api/copilot/translate', {
+        text: text,
+        target_lang: 'Hindi'
+      });
+      const hindiText = response.data.translated_text;
+      setTranslatedTexts(prev => ({ ...prev, [index]: hindiText }));
+      setShowHindi(prev => ({ ...prev, [index]: true }));
+    } catch (err) {
+      console.error("Translation error:", err);
+    } finally {
+      setTranslatingIndex(null);
+    }
+  };
+
+  // 1-Click Shift Handover Report Exporter
   const handleExportShiftReport = () => {
     if (messages.length <= 1) {
       alert("No operational troubleshooting logs to export for this shift yet. Ask DocPilot a query first!");
@@ -137,7 +172,8 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
       if (msg.sender === 'user') {
         report += `\n[OPERATOR QUERY #${Math.ceil(i / 2)}]\n${msg.text}\n`;
       } else if (i > 0) {
-        report += `\n[DOCPILOT GUIDELINE RESPONSE]\n${msg.text.replace(/\*\*/g, '')}\n`;
+        const textToUse = showHindi[i] && translatedTexts[i] ? translatedTexts[i] : msg.text;
+        report += `\n[DOCPILOT GUIDELINE RESPONSE]\n${textToUse.replace(/\*\*/g, '')}\n`;
         if (msg.activeNodes && msg.activeNodes.length > 0) {
           report += `Affected Equipment Nodes: ${msg.activeNodes.join(', ')}\n`;
         }
@@ -218,14 +254,19 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
             <Bot size={18} />
           </div>
           <div>
-            <h2 className="font-bold text-xs font-display text-stone-950">DocPilot Assistant</h2>
-            <p className="text-[9px] font-mono text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> System Online
+            <div className="flex items-center gap-2">
+              <h2 className="font-bold text-xs font-display text-stone-950">DocPilot Assistant</h2>
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-black bg-stone-300 text-stone-900 border border-stone-400">
+                EN / HI / HINGLISH
+              </span>
+            </div>
+            <p className="text-[9px] font-mono text-emerald-600 font-bold uppercase tracking-wider flex items-center gap-1.5 mt-0.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping" /> Multilingual System Online
             </p>
           </div>
         </div>
 
-        {/* Step 4: Export Shift Handover Report Button */}
+        {/* Export Shift Report Button */}
         <button
           type="button"
           onClick={handleExportShiftReport}
@@ -238,97 +279,122 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
 
       {/* 2. Messages Box */}
       <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4">
-        {messages.map((msg, index) => (
-          <div
-            key={index}
-            className={`flex gap-3 max-w-[88%] ${
-              msg.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
-            }`}
-          >
-            {/* Avatar */}
+        {messages.map((msg, index) => {
+          const currentText = showHindi[index] && translatedTexts[index] ? translatedTexts[index] : msg.text;
+
+          return (
             <div
-              className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-md ${
-                msg.sender === 'user' 
-                  ? 'bg-stone-900 text-lime-400 font-mono' 
-                  : 'bg-slate-950 text-lime-400'
+              key={index}
+              className={`flex gap-3 max-w-[88%] ${
+                msg.sender === 'user' ? 'ml-auto flex-row-reverse' : 'mr-auto'
               }`}
             >
-              {msg.sender === 'user' ? <User size={14} /> : <Bot size={14} />}
-            </div>
+              {/* Avatar */}
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 text-white font-bold text-xs shadow-md ${
+                  msg.sender === 'user' 
+                    ? 'bg-stone-900 text-lime-400 font-mono' 
+                    : 'bg-slate-950 text-lime-400'
+                }`}
+              >
+                {msg.sender === 'user' ? <User size={14} /> : <Bot size={14} />}
+              </div>
 
-            {/* Message Bubble */}
-            <div
-              className={`p-4 rounded-3xl text-xs leading-relaxed border relative group ${
-                msg.sender === 'user'
-                  ? 'bg-stone-300 border-stone-400 text-stone-950'
-                  : 'bg-white border-stone-300 text-stone-800'
-              }`}
-            >
-              {/* Spoken Text-to-Speech Audio Readout Button */}
-              {msg.sender === 'pilot' && (
-                <button
-                  type="button"
-                  onClick={() => handleSpeakText(msg.text, index)}
-                  className={`absolute top-3 right-3 p-1.5 rounded-full transition-all ${
-                    speakingIndex === index 
-                      ? 'bg-lime-400 text-slate-950 animate-pulse' 
-                      : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
-                  }`}
-                  title={speakingIndex === index ? "Stop Spoken Audio" : "Listen to Spoken Instructions"}
-                >
-                  {speakingIndex === index ? <VolumeX size={13} /> : <Volume2 size={13} />}
-                </button>
-              )}
-
-              <div className="whitespace-pre-wrap pr-6">{renderMessageText(msg.text)}</div>
-
-              {/* Active Graph Nodes tags */}
-              {msg.activeNodes && msg.activeNodes.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-1.5 border-t border-stone-200 pt-2.5">
-                  <span className="text-[10px] font-mono font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
-                    Mentioned:
-                  </span>
-                  {msg.activeNodes.map((node) => (
+              {/* Message Bubble */}
+              <div
+                className={`p-4 rounded-3xl text-xs leading-relaxed border relative group ${
+                  msg.sender === 'user'
+                    ? 'bg-stone-300 border-stone-400 text-stone-950'
+                    : 'bg-white border-stone-300 text-stone-800'
+                }`}
+              >
+                {/* Action Buttons: Audio Readout & Hindi Translation Toggle */}
+                {msg.sender === 'pilot' && (
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5">
                     <button
-                      key={node}
-                      onClick={() => onNodeFocus(node)}
-                      className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-stone-300 text-stone-950 border border-stone-400 hover:opacity-80 transition-all cursor-pointer"
+                      type="button"
+                      onClick={() => handleTranslateMessage(msg.text, index)}
+                      disabled={translatingIndex === index}
+                      className={`px-2 py-1 rounded-full text-[9px] font-mono font-bold transition-all flex items-center gap-1 ${
+                        showHindi[index]
+                          ? 'bg-slate-950 text-lime-400 shadow-sm'
+                          : 'bg-stone-100 hover:bg-stone-200 text-stone-700 border border-stone-300'
+                      }`}
+                      title={showHindi[index] ? "Switch back to English" : "Translate response into Hindi (हिंदी)"}
                     >
-                      {node}
+                      {translatingIndex === index ? (
+                        <RefreshCw size={10} className="animate-spin" />
+                      ) : (
+                        <Languages size={11} />
+                      )}
+                      <span>{showHindi[index] ? 'ENG' : 'हिंदी'}</span>
                     </button>
-                  ))}
-                </div>
-              )}
 
-              {/* Citations list */}
-              {msg.citations && msg.citations.length > 0 && (
-                <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
-                  <Bookmark size={12} className="text-stone-950" />
-                  <span className="text-[10px] font-mono text-stone-900 font-bold uppercase tracking-wider">Citations:</span>
-                  {msg.citations.map((cite, cIdx) => {
-                    const chunk = msg.retrievedChunks?.find(c => c.filename === cite);
-                    return (
+                    <button
+                      type="button"
+                      onClick={() => handleSpeakText(currentText, index)}
+                      className={`p-1.5 rounded-full transition-all ${
+                        speakingIndex === index 
+                          ? 'bg-lime-400 text-slate-950 animate-pulse' 
+                          : 'bg-stone-100 hover:bg-stone-200 text-stone-600'
+                      }`}
+                      title={speakingIndex === index ? "Stop Spoken Audio" : "Listen to Spoken Instructions"}
+                    >
+                      {speakingIndex === index ? <VolumeX size={13} /> : <Volume2 size={13} />}
+                    </button>
+                  </div>
+                )}
+
+                <div className="whitespace-pre-wrap pr-16">{renderMessageText(currentText)}</div>
+
+                {/* Active Graph Nodes tags */}
+                {msg.activeNodes && msg.activeNodes.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-1.5 border-t border-stone-200 pt-2.5">
+                    <span className="text-[10px] font-mono font-bold text-stone-500 uppercase tracking-wider flex items-center gap-1">
+                      Mentioned:
+                    </span>
+                    {msg.activeNodes.map((node) => (
                       <button
-                        key={cIdx}
-                        type="button"
-                        onClick={() => {
-                          if (chunk) {
-                            setViewingCitation({ filename: cite, content: chunk.content });
-                          } else {
-                            setViewingCitation({ filename: cite, content: "No text snippet cached for this message." });
-                          }
-                        }}
-                        className="px-3 py-1 rounded-full text-[10px] font-mono bg-stone-300 text-stone-950 font-bold border border-stone-400 hover:opacity-80 transition-all cursor-pointer"
+                        key={node}
+                        onClick={() => onNodeFocus(node)}
+                        className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-stone-300 text-stone-950 border border-stone-400 hover:opacity-80 transition-all cursor-pointer"
                       >
-                        {cite}
+                        {node}
                       </button>
-                    );
-                  })}
-                </div>
-              )}
+                    ))}
+                  </div>
+                )}
+
+                {/* Citations list */}
+                {msg.citations && msg.citations.length > 0 && (
+                  <div className="mt-2.5 flex flex-wrap gap-1.5 items-center">
+                    <Bookmark size={12} className="text-stone-950" />
+                    <span className="text-[10px] font-mono text-stone-900 font-bold uppercase tracking-wider">Citations:</span>
+                    {msg.citations.map((cite, cIdx) => {
+                      const chunk = msg.retrievedChunks?.find(c => c.filename === cite);
+                      return (
+                        <button
+                          key={cIdx}
+                          type="button"
+                          onClick={() => {
+                            if (chunk) {
+                              setViewingCitation({ filename: cite, content: chunk.content });
+                            } else {
+                              setViewingCitation({ filename: cite, content: "No text snippet cached for this message." });
+                            }
+                          }}
+                          className="px-3 py-1 rounded-full text-[10px] font-mono bg-stone-300 text-stone-950 font-bold border border-stone-400 hover:opacity-80 transition-all cursor-pointer"
+                        >
+                          {cite}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {loading && (
           <div className="flex gap-3 mr-auto max-w-[85%]">
@@ -370,7 +436,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder={isListening ? "Listening... Speak your query now..." : "Ask DocPilot or click microphone for voice command..."}
+          placeholder={isListening ? "Listening... Speak in English, Hindi, or Hinglish..." : "Ask in English, Hindi, or Hinglish (e.g. PUMP-101A ka max pressure kya hai?)..."}
           disabled={loading}
           className="flex-1 px-5 py-3 rounded-full border border-stone-300 bg-white text-xs text-stone-900 focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono disabled:opacity-50"
         />

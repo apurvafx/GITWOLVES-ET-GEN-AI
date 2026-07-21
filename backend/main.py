@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile,
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, get_db_connection
-from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest, AddNodeRequest, AddEdgeRequest
+from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest, AddNodeRequest, AddEdgeRequest, TranslateRequest
 import auth
 import secrets
 import io
@@ -421,6 +421,12 @@ def copilot_chat(payload: ChatRequest, user: dict = Depends(get_current_user)):
         
     response = search_engine.generate_rag_answer(payload.query, chunks, company_id)
     return response
+
+@app.post("/api/copilot/translate")
+def translate_content(payload: TranslateRequest, user: dict = Depends(get_current_user)):
+    """Translates text or manual content into Hindi or English using Gemini while preserving equipment tags."""
+    translated = search_engine.translate_text(payload.text, payload.target_lang)
+    return {"translated_text": translated, "target_lang": payload.target_lang}
 
 @app.get("/api/docs/content/{doc_id}")
 def get_document_content(doc_id: str, user: dict = Depends(get_current_user)):
