@@ -330,41 +330,41 @@ flowchart LR
 
 ### Backend Services
 
-| Technology | Purpose |
-|---|---|
-| Python 3.10 | Runtime environment |
-| FastAPI | Asynchronous REST API framework |
-| Uvicorn | ASGI server implementation |
-| SQLite | Relational persistence model (9 tables) |
-| Google Gemini 3.1 | Generative model for answer synthesis and graph parsing |
-| Gemini Embedding 2 | Dense vector representation model (768 dimensions) |
-| Pydantic | Structured validation boundaries |
-| PyPDF | Binary document parsing |
-| PBKDF2 SHA-256 | Cryptographic salt and hash utility |
+| Platform / Logo | Technology | Version | Purpose |
+|:---:|:---|:---|:---|
+| <img src="https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white" height="28" /> | **Python** | `3.10` | Core execution environment |
+| <img src="https://img.shields.io/badge/FastAPI-009688?style=for-the-badge&logo=fastapi&logoColor=white" height="28" /> | **FastAPI** | Latest | High-performance asynchronous API framework |
+| <img src="https://img.shields.io/badge/Uvicorn-40908E?style=for-the-badge&logo=gunicorn&logoColor=white" height="28" /> | **Uvicorn** | Latest | ASGI server implementation |
+| <img src="https://img.shields.io/badge/SQLite-003B57?style=for-the-badge&logo=sqlite&logoColor=white" height="28" /> | **SQLite** | Built-in | Embedded relational persistence model (9 tables) |
+| <img src="https://img.shields.io/badge/Google_Gemini_3.1-8E75B2?style=for-the-badge&logo=google&logoColor=white" height="28" /> | **Google Gemini 3.1** | `Flash Lite` | LLM for grounded answer synthesis & graph parsing |
+| <img src="https://img.shields.io/badge/Gemini_Embedding_2-4285F4?style=for-the-badge&logo=google&logoColor=white" height="28" /> | **Gemini Embedding** | `v2` | Dense vector representation model (768 dimensions) |
+| <img src="https://img.shields.io/badge/Pydantic-E92063?style=for-the-badge&logo=pydantic&logoColor=white" height="28" /> | **Pydantic** | Latest | Structured validation boundaries |
+| <img src="https://img.shields.io/badge/PyPDF-FF6F61?style=for-the-badge&logo=pdf&logoColor=white" height="28" /> | **PyPDF** | Latest | Binary document text extraction |
+| <img src="https://img.shields.io/badge/Cryptography-333333?style=for-the-badge" height="28" /> | **PBKDF2 SHA-256** | Built-in | Cryptographic salt and password hashing |
 
 ### Frontend UI
 
-| Technology | Version | Purpose |
-|---|---|---|
-| React | `19.2.7` | UI runtime framework |
-| TypeScript | `6.0.2` | Type enforcement layer |
-| Vite | `8.1.1` | Project bundling and hot reloading |
-| TailwindCSS | `3.4.19` | Utility-first styling framework |
-| Framer Motion | `12.42.2` | Fluid interface animations |
-| D3 Force Graph | `1.29.1` | Topological network visualization |
-| GSAP | `3.15.0` | Scroll-triggered marketing animations |
-| Axios | `1.18.1` | Promise-based HTTP client |
-| Lucide React | `1.25.0` | Icon set provider |
+| Platform / Logo | Technology | Version | Purpose |
+|:---:|:---|:---|:---|
+| <img src="https://img.shields.io/badge/React-61DAFB?style=for-the-badge&logo=react&logoColor=black" height="28" /> | **React** | `19.2.7` | UI component rendering framework |
+| <img src="https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white" height="28" /> | **TypeScript** | `6.0.2` | Static type safety layer |
+| <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" height="28" /> | **Vite** | `8.1.1` | High-speed bundle builder & development server |
+| <img src="https://img.shields.io/badge/TailwindCSS-06B6D4?style=for-the-badge&logo=tailwindcss&logoColor=white" height="28" /> | **TailwindCSS** | `3.4.19` | Utility-first responsive design framework |
+| <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" height="28" /> | **Framer Motion** | `12.42.2` | Smooth micro-interactions & layout animations |
+| <img src="https://img.shields.io/badge/D3.js-F9A03C?style=for-the-badge&logo=d3dotjs&logoColor=black" height="28" /> | **D3 Force Graph** | `1.29.1` | Physics-based topological network renderer |
+| <img src="https://img.shields.io/badge/GSAP-88CE02?style=for-the-badge&logo=greensock&logoColor=black" height="28" /> | **GSAP** | `3.15.0` | Scroll-triggered marketing animations |
+| <img src="https://img.shields.io/badge/Axios-5A29E4?style=for-the-badge&logo=axios&logoColor=white" height="28" /> | **Axios** | `1.18.1` | HTTP client for API transactions |
+| <img src="https://img.shields.io/badge/Lucide-F56565?style=for-the-badge" height="28" /> | **Lucide Icons** | `1.25.0` | Clean vector iconography |
 
-### Deployment and Infrastructure
+### Infrastructure
 
-| Technology | Purpose |
-|---|---|
-| Docker | Image containerization |
-| Nginx | Reverse proxy configuration |
-| Vercel | Static frontend CDN deployment |
-| Render | Cloud backend computation |
-| GitHub | Code repository and CI/CD pipelines |
+| Platform / Logo | Technology | Version | Purpose |
+|:---:|:---|:---|:---|
+| <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white" height="28" /> | **Docker** | Latest | Image containerization |
+| <img src="https://img.shields.io/badge/Nginx-009639?style=for-the-badge&logo=nginx&logoColor=white" height="28" /> | **Nginx** | Latest | Reverse proxy and production routing |
+| <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" height="28" /> | **Vercel** | Latest | Frontend deployment CDN |
+| <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=black" height="28" /> | **Render** | Latest | Asynchronous Python API host |
+| <img src="https://img.shields.io/badge/GitHub-181717?style=for-the-badge&logo=github&logoColor=white" height="28" /> | **GitHub** | Latest | Version control and auto-deployment triggers |
 
 ---
 
