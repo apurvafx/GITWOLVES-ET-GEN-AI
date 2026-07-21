@@ -1,4 +1,5 @@
-from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile, File
+from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile, File, Request, Response
+from fastapi.responses import JSONResponse
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, get_db_connection
@@ -7,7 +8,9 @@ import auth
 import secrets
 import io
 import pypdf
+import time
 from datetime import datetime
+from typing import Dict, List
 import search_engine
 import graph_parser
 
@@ -19,6 +22,54 @@ app = FastAPI(
     description="Multi-tenant Asset & Operations Brain backend",
     version="1.0.0"
 )
+
+# Simple in-memory rate limiter store (120 requests/minute limit per IP)
+rate_limit_store: Dict[str, List[float]] = {}
+RATE_LIMIT_WINDOW = 60
+RATE_LIMIT_MAX_REQUESTS = 120
+MAX_PAYLOAD_SIZE = 15 * 1024 * 1024  # 15 MB
+
+@app.middleware("http")
+async def security_and_rate_limit_middleware(request: Request, call_next):
+    # 1. Rate Limiting Check
+    client_ip = request.client.host if request.client else "unknown"
+    current_time = time.time()
+    
+    if client_ip not in rate_limit_store:
+        rate_limit_store[client_ip] = []
+        
+    # Prune expired timestamps
+    rate_limit_store[client_ip] = [t for t in rate_limit_store[client_ip] if current_time - t < RATE_LIMIT_WINDOW]
+    
+    if len(rate_limit_store[client_ip]) >= RATE_LIMIT_MAX_REQUESTS:
+        return JSONResponse(
+            status_code=429,
+            content={"detail": "Too many requests. Rate limit exceeded. Please wait a minute."}
+        )
+        
+    rate_limit_store[client_ip].append(current_time)
+
+    # 2. Body Payload Size Limit Check (max 15MB)
+    content_length = request.headers.get("content-length")
+    if content_length:
+        try:
+            if int(content_length) > MAX_PAYLOAD_SIZE:
+                return JSONResponse(
+                    status_code=413,
+                    content={"detail": "Payload too large. Max allowed size is 15MB."}
+                )
+        except ValueError:
+            return JSONResponse(status_code=400, content={"detail": "Invalid content-length header"})
+
+    # Proceed with execution
+    response: Response = await call_next(request)
+    
+    # 3. Security Headers Injection
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-XSS-Protection"] = "1; mode=block"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 # Enable CORS for frontend communication
 app.add_middleware(
