@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import api from '../api';
-import { Send, Bot, User, Bookmark, AlertTriangle, Sparkles, Activity, Mic, MicOff, Volume2, VolumeX, Download, FileText, Languages, RefreshCw } from 'lucide-react';
+import { Send, Bot, User, Bookmark, AlertTriangle, Mic, MicOff, Volume2, VolumeX, Download, Languages, RefreshCw } from 'lucide-react';
 
 interface Message {
   sender: 'user' | 'pilot';
@@ -246,7 +246,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
   };
 
   return (
-    <div className="flex flex-col h-full max-h-full overflow-hidden bg-[#f0f0ed] border border-stone-300 rounded-3xl shadow-xl">
+    <div className="flex flex-col h-full max-h-full overflow-hidden border border-stone-300/40 liquid-glass shadow-2xl">
       {/* 1. Panel Header */}
       <div className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-stone-300">
         <div className="flex items-center gap-3">
@@ -418,7 +418,7 @@ export const DocPilotChat: React.FC<DocPilotChatProps> = ({ onNodeFocus }) => {
       </div>
 
       {/* 3. Input Form with Microphone Dictation */}
-      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-stone-300 bg-[#f0f0ed] flex gap-2">
+      <form onSubmit={handleSend} className="flex-shrink-0 p-4 border-t border-stone-300 bg-white/20 backdrop-blur-md flex gap-2">
         <button
           type="button"
           onClick={toggleVoiceDictation}

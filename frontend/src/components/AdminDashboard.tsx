@@ -11,9 +11,6 @@ import {
   CheckCircle2, 
   AlertTriangle,
   UserCheck,
-  Activity,
-  Layers,
-  Sparkles,
   GitPullRequest,
   Check,
   X,
@@ -420,7 +417,7 @@ export const AdminDashboard: React.FC = () => {
         <div className="grid lg:grid-cols-12 gap-8">
           {/* Left Panel */}
           <div className="lg:col-span-5 space-y-8">
-            <div className="p-9 rounded-3xl border border-stone-300 bg-[#f0f0ed] shadow-xl space-y-6">
+            <div className="p-9 rounded-3xl border border-stone-300/40 liquid-glass shadow-2xl space-y-6">
               <div className="flex items-center gap-3.5">
                 <div className="p-3.5 rounded-2xl bg-slate-900 text-lime-400">
                   <Key size={22} />
@@ -477,7 +474,7 @@ export const AdminDashboard: React.FC = () => {
             </div>
 
             {/* Active Employees & Passwords List */}
-            <div className="p-9 rounded-3xl border border-stone-300 bg-[#f0f0ed] shadow-xl space-y-4">
+            <div className="p-9 rounded-3xl border border-stone-300/40 liquid-glass shadow-2xl space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
                   <UserCheck className="text-stone-950" size={20} />
@@ -531,7 +528,7 @@ export const AdminDashboard: React.FC = () => {
           </div>
 
           {/* Right Panel */}
-          <div className="lg:col-span-7 p-9 rounded-3xl border border-stone-300 bg-[#f0f0ed] shadow-xl space-y-6">
+          <div className="lg:col-span-7 p-9 rounded-3xl border border-stone-300/40 liquid-glass shadow-2xl space-y-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3.5">
                 <div className="p-3.5 rounded-2xl bg-slate-900 text-lime-400">

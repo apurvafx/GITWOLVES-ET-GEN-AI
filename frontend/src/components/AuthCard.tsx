@@ -2,15 +2,14 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import api from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Shield, Key, Building2, User, Eye, EyeOff, Play, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { Shield, Building2, User, Eye, EyeOff, Play, Sparkles, AlertTriangle, CheckCircle2 } from 'lucide-react';
 
 interface AuthCardProps {
   onSuccess: () => void;
   initialTab?: 'login' | 'register';
-  selectedPlan?: string;
 }
 
-export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess, initialTab = 'login', selectedPlan = 'pro' }) => {
+export const AuthCard: React.FC<AuthCardProps> = ({ onSuccess, initialTab = 'login' }) => {
   const { login } = useAuth();
   const [activeTab, setActiveTab] = useState<'login' | 'register'>(initialTab);
   const [showPassword, setShowPassword] = useState(false);

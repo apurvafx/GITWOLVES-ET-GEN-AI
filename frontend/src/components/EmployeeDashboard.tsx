@@ -8,13 +8,10 @@ import {
   Building2, 
   LogOut, 
   FileText, 
-  Network, 
-  Bot,
   Activity,
   Bookmark,
   Search,
   Layers,
-  Sparkles,
   Plus,
   GitFork,
   X,
@@ -25,7 +22,10 @@ import {
   Play,
   Pause,
   TrendingUp,
-  Gauge
+  Gauge,
+  Workflow,
+  Shield,
+  MessageSquare
 } from 'lucide-react';
 
 const INCIDENT_TIMELINES = [
@@ -85,6 +85,12 @@ export const EmployeeDashboard: React.FC = () => {
   const [lotoSubmitting, setLotoSubmitting] = useState<boolean>(false);
   const [lotoError, setLotoError] = useState<string | null>(null);
   const [lotoSuccess, setLotoSuccess] = useState<string | null>(null);
+
+  // Left panel view toggle ('matrix' = standard network graph, 'spatial' = visual identity flowchart and McKinsey impact)
+  const [leftPanelTab, setLeftPanelTab] = useState<'matrix' | 'spatial'>('matrix');
+
+  // Mobile viewport active tab switcher ('sidebar' | 'matrix' | 'chat')
+  const [mobileTab, setMobileTab] = useState<'sidebar' | 'matrix' | 'chat'>('matrix');
 
   // Graph Editor Modal State (Step 2)
   const [showGraphEditor, setShowGraphEditor] = useState(false);
@@ -343,7 +349,7 @@ export const EmployeeDashboard: React.FC = () => {
       {/* Workspace Layout */}
       <div className="flex-1 flex overflow-hidden min-h-0 p-4 gap-4">
         {/* Left Sidebar */}
-        <aside className="w-64 rounded-3xl border border-stone-300 bg-[#f0f0ed] backdrop-blur-2xl flex flex-col flex-shrink-0 shadow-xl overflow-hidden">
+        <aside className={`rounded-3xl border border-stone-300/40 liquid-glass flex-col flex-shrink-0 shadow-2xl overflow-hidden ${mobileTab === 'sidebar' ? 'flex w-full h-full' : 'hidden xl:flex w-64 h-full'}`}>
           {/* Document Library (Top half) */}
           <div className="h-[50%] flex flex-col min-h-0 border-b border-stone-300">
             <div className="p-4 border-b border-stone-300 flex items-center justify-between">
@@ -443,81 +449,231 @@ export const EmployeeDashboard: React.FC = () => {
 
         {/* Split Screen Main */}
         <main className="flex-1 flex overflow-hidden gap-4 min-h-0">
-          <div className="w-[42%] flex flex-col gap-2.5 flex-shrink-0 h-full min-h-0 rounded-3xl border border-stone-300 bg-[#f0f0ed] p-4 shadow-xl">
+          <div className={`flex-col gap-2.5 flex-shrink-0 h-full min-h-0 rounded-3xl border border-stone-300/40 liquid-glass p-4 shadow-2xl ${mobileTab === 'matrix' ? 'flex w-full' : 'hidden lg:flex lg:w-[42%]'}`}>
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Network size={16} className="text-stone-950" />
-                <h2 className="font-bold text-xs font-display text-stone-950">Operations Matrix</h2>
-              </div>
-              <div className="flex items-center gap-2">
-                {/* Step 2: Edit Network Button */}
+              <div className="flex items-center gap-1.5 bg-stone-300/60 p-1 rounded-full border border-stone-350">
                 <button
-                  onClick={() => {
-                    setShowGraphEditor(true);
-                    setEditorError(null);
-                    setEditorSuccess(null);
-                  }}
-                  className="px-3 py-1 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-slate-950 text-lime-400 hover:bg-slate-800 transition-all flex items-center gap-1 active:scale-95 shadow-sm"
+                  type="button"
+                  onClick={() => setLeftPanelTab('matrix')}
+                  className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase transition-all ${
+                    leftPanelTab === 'matrix' ? 'bg-slate-950 text-lime-400 shadow-sm' : 'text-stone-600'
+                  }`}
                 >
-                  <Plus size={10} /> Edit Network
+                  Operations Matrix
                 </button>
                 <button
-                  onClick={() => setNodeLimit(nodeLimit === 'top' ? 'all' : 'top')}
-                  className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-stone-300 hover:bg-stone-400 text-stone-950 transition-all flex items-center gap-1 border border-stone-400"
+                  type="button"
+                  onClick={() => setLeftPanelTab('spatial')}
+                  className={`px-3 py-1 rounded-full text-[10px] font-mono font-bold tracking-wider uppercase transition-all ${
+                    leftPanelTab === 'spatial' ? 'bg-slate-950 text-lime-400 shadow-sm' : 'text-stone-600'
+                  }`}
                 >
-                  <Layers size={10} />
-                  {nodeLimit === 'top' ? 'Focus (60)' : `All (${nodes.length})`}
+                  Spatial Flowchart
                 </button>
               </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
-                {[
-                  { id: 'all', label: 'All' },
-                  { id: 'asset', label: 'Assets' },
-                  { id: 'procedure', label: 'Procedures' },
-                  { id: 'regulation', label: 'Regulations' },
-                  { id: 'incident', label: 'Incidents' },
-                  { id: 'document', label: 'Documents' },
-                ].map((cat) => (
+              
+              {leftPanelTab === 'matrix' && (
+                <div className="flex items-center gap-2">
                   <button
-                    key={cat.id}
-                    onClick={() => setSelectedCategory(cat.id)}
-                    className={`px-3.5 py-1.5 rounded-full font-mono font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap text-[10px] ${
-                      selectedCategory === cat.id
-                        ? 'bg-slate-950 text-lime-400 shadow-md'
-                        : 'bg-stone-200 text-stone-700 hover:bg-stone-300 border border-stone-300'
-                    }`}
+                    onClick={() => {
+                      setShowGraphEditor(true);
+                      setEditorError(null);
+                      setEditorSuccess(null);
+                    }}
+                    className="px-3 py-1 rounded-full text-[10px] font-mono font-black uppercase tracking-wider bg-slate-950 text-lime-400 hover:bg-slate-800 transition-all flex items-center gap-1 active:scale-95 shadow-sm"
                   >
-                    {cat.label}
+                    <Plus size={10} /> Edit Network
                   </button>
-                ))}
-              </div>
-
-              <div className="relative">
-                <Search size={12} className="absolute left-3 top-2.5 text-stone-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Filter nodes (e.g. PUMP-101A, ATEX)..."
-                  className="w-full pl-8 pr-3 py-2 text-xs rounded-full border border-stone-300 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono"
-                />
-              </div>
+                  <button
+                    onClick={() => setNodeLimit(nodeLimit === 'top' ? 'all' : 'top')}
+                    className="px-3 py-1 rounded-full text-[10px] font-mono font-bold bg-stone-300 hover:bg-stone-400 text-stone-950 transition-all flex items-center gap-1 border border-stone-400"
+                  >
+                    <Layers size={10} />
+                    {nodeLimit === 'top' ? 'Focus (60)' : `All (${nodes.length})`}
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="h-[52%] min-h-0 relative rounded-2xl overflow-hidden border border-stone-300 bg-stone-950">
-              <ForceGraph
-                nodes={filteredNodes}
-                edges={filteredEdges}
-                focusedNodeId={focusedNodeId}
-                theme="dark"
-                onNodeClick={(id) => handleNodeFocus(id)}
-                activePropagationNodes={activePropagationNodes}
-                lotoLockedNodes={lotoLockedNodes}
-              />
-            </div>
+            {leftPanelTab === 'spatial' ? (
+              <div className="flex-1 flex flex-col gap-4 min-h-0 overflow-y-auto">
+                {/* Liquid Glass Header */}
+                <div className="relative overflow-hidden p-6 rounded-3xl bg-slate-950 border border-stone-800 text-stone-100 shadow-2xl flex flex-col justify-between">
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-lime-400/10 rounded-full blur-2xl pointer-events-none" />
+                  
+                  <div className="space-y-1.5 z-10">
+                    <span className="bg-lime-400 text-slate-950 font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                      Knowledge Engineering Command Center
+                    </span>
+                    <h3 className="text-base font-bold font-display text-white">
+                      Plant Knowledge Fragmentation Impact
+                    </h3>
+                    <p className="text-xs text-stone-400 leading-relaxed font-light">
+                      Industrial intelligence consolidation dashboard mapping NASSCOM-EY & McKinsey data loss vectors.
+                    </p>
+                  </div>
+                </div>
+
+                {/* SVG Liquid Flow Pipeline */}
+                <div className="p-4 rounded-3xl border border-stone-300 bg-stone-900 shadow-inner flex flex-col gap-2 relative">
+                  <span className="text-[9px] font-mono font-bold text-lime-400 uppercase tracking-widest absolute top-3 left-4">
+                    Data Pipeline Liquid Flow
+                  </span>
+                  
+                  <div className="h-28 w-full flex items-center justify-center">
+                    <svg className="w-full h-full" viewBox="0 0 400 100">
+                      <defs>
+                        <filter id="neon-glow" x="-20%" y="-20%" width="140%" height="140%">
+                          <feGaussianBlur stdDeviation="3" result="blur" />
+                          <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                        </filter>
+                      </defs>
+
+                      <path d="M 50 25 L 200 50" stroke="#444" strokeWidth="2.5" fill="none" />
+                      <path d="M 50 75 L 200 50" stroke="#444" strokeWidth="2.5" fill="none" />
+                      <path d="M 200 50 L 350 50" stroke="#444" strokeWidth="3" fill="none" />
+
+                      <circle r="4.5" fill="#c4f124" filter="url(#neon-glow)">
+                        <animateMotion dur="2.5s" repeatCount="indefinite" path="M 50 25 L 200 50" />
+                      </circle>
+                      <circle r="4.5" fill="#38bdf8" filter="url(#neon-glow)">
+                        <animateMotion dur="3.2s" repeatCount="indefinite" path="M 50 75 L 200 50" />
+                      </circle>
+                      <circle r="6" fill="#ef4444" filter="url(#neon-glow)">
+                        <animateMotion dur="2s" repeatCount="indefinite" path="M 200 50 L 350 50" />
+                      </circle>
+
+                      <circle cx="50" cy="25" r="9" fill="#0f0f14" stroke="#c4f124" strokeWidth="2" />
+                      <circle cx="50" cy="75" r="9" fill="#0f0f14" stroke="#38bdf8" strokeWidth="2" />
+                      
+                      <rect x="180" y="35" width="40" height="30" rx="6" fill="#0f0f14" stroke="#ef4444" strokeWidth="2" filter="url(#neon-glow)" />
+                      
+                      <circle cx="350" cy="50" r="10" fill="#0f0f14" stroke="#10b981" strokeWidth="2.5" />
+
+                      <text x="50" y="29" fill="#fff" fontSize="6" fontWeight="bold" textAnchor="middle">S</text>
+                      <text x="50" y="79" fill="#fff" fontSize="6" fontWeight="bold" textAnchor="middle">K</text>
+                      <text x="200" y="53" fill="#fff" fontSize="7" fontWeight="black" textAnchor="middle">AI</text>
+                      <text x="350" y="54" fill="#fff" fontSize="7" fontWeight="bold" textAnchor="middle">✔</text>
+
+                      <text x="45" y="12" fill="#c4f124" fontSize="8" fontWeight="bold">Silos</text>
+                      <text x="45" y="93" fill="#38bdf8" fontSize="8" fontWeight="bold">Knowledge</text>
+                      <text x="200" y="27" fill="#ef4444" fontSize="8" fontWeight="bold">VigilOps</text>
+                      <text x="350" y="37" fill="#10b981" fontSize="8" fontWeight="bold">Operations</text>
+                    </svg>
+                  </div>
+                </div>
+
+                {/* McKinsey & NASSCOM Stats Grid */}
+                <div className="grid grid-cols-2 gap-3.5 flex-1 overflow-y-auto">
+                  <div className="p-4 rounded-3xl border border-stone-300 bg-white shadow-sm flex flex-col justify-between space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">McKinsey Global</span>
+                      <Workflow size={14} className="text-stone-900" />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-black font-mono text-slate-900">35%</h4>
+                      <p className="text-[10px] font-bold text-stone-950 mt-1">Search Latency Loss</p>
+                      <p className="text-[9px] text-stone-500 mt-0.5 leading-tight">
+                        Working hours spent searching manuals or resolving hidden asset dependencies.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-3xl border border-stone-300 bg-white shadow-sm flex flex-col justify-between space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">NASSCOM-EY</span>
+                      <Layers size={14} className="text-stone-900" />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-black font-mono text-slate-900">7-12</h4>
+                      <p className="text-[10px] font-bold text-stone-950 mt-1">Disconnected Silos</p>
+                      <p className="text-[9px] text-stone-500 mt-0.5 leading-tight">
+                        Separate document hubs for engineering drawing P&IDs, manuals, and work orders.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-3xl border border-stone-300 bg-white shadow-sm flex flex-col justify-between space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">Knowledge Cliff</span>
+                      <Shield size={14} className="text-stone-900" />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-black font-mono text-slate-900">25%</h4>
+                      <p className="text-[10px] font-bold text-stone-950 mt-1">Engineer Retirements</p>
+                      <p className="text-[9px] text-stone-500 mt-0.5 leading-tight">
+                        Plant experience lost in the next decade. VigilOps preserves knowledge graphs.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-3xl border border-stone-300 bg-white shadow-sm flex flex-col justify-between space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9px] font-mono font-bold text-stone-500 uppercase">BIS Research</span>
+                      <Activity size={14} className="text-stone-900" />
+                    </div>
+                    <div>
+                      <h4 className="text-3xl font-black font-mono text-slate-900">-22%</h4>
+                      <p className="text-[10px] font-bold text-stone-950 mt-1">Unplanned Downtime</p>
+                      <p className="text-[9px] text-stone-500 mt-0.5 leading-tight">
+                        Downtime events resolved by unifying equipment history and dependency mapping.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 text-[10px]">
+                    {[
+                      { id: 'all', label: 'All' },
+                      { id: 'asset', label: 'Assets' },
+                      { id: 'procedure', label: 'Procedures' },
+                      { id: 'regulation', label: 'Regulations' },
+                      { id: 'incident', label: 'Incidents' },
+                      { id: 'document', label: 'Documents' },
+                    ].map((cat) => (
+                      <button
+                        key={cat.id}
+                        type="button"
+                        onClick={() => setSelectedCategory(cat.id)}
+                        className={`px-3.5 py-1.5 rounded-full font-mono font-bold uppercase tracking-wider transition-all cursor-pointer whitespace-nowrap text-[10px] ${
+                          selectedCategory === cat.id
+                            ? 'bg-slate-950 text-lime-400 shadow-md'
+                            : 'bg-stone-200 text-stone-700 hover:bg-stone-300 border border-stone-300'
+                        }`}
+                      >
+                        {cat.label}
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="relative">
+                    <Search size={12} className="absolute left-3 top-2.5 text-stone-400" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Filter nodes (e.g. PUMP-101A, ATEX)..."
+                      className="w-full pl-8 pr-3 py-2 text-xs rounded-full border border-stone-300 bg-white text-stone-900 focus:outline-none focus:ring-2 focus:ring-lime-400/50 font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="h-[52%] min-h-0 relative rounded-2xl overflow-hidden border border-stone-300 bg-stone-950">
+                  <ForceGraph
+                    nodes={filteredNodes}
+                    edges={filteredEdges}
+                    focusedNodeId={focusedNodeId}
+                    theme="dark"
+                    onNodeClick={(id) => handleNodeFocus(id)}
+                    activePropagationNodes={activePropagationNodes}
+                    lotoLockedNodes={lotoLockedNodes}
+                  />
+                </div>
+              </>
+            )}
 
             {/* Step 6: Incident Root-Cause Fault Propagation Timeline Visualizer */}
             <div className="flex-1 min-h-0 border border-stone-300 rounded-2xl bg-white p-4 shadow-inner flex flex-col justify-between font-sans">
@@ -614,10 +770,44 @@ export const EmployeeDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className="flex-1 flex flex-col gap-2 h-full min-h-0">
+          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:flex-1'}`}>
             <DocPilotChat onNodeFocus={handleNodeFocus} />
           </div>
         </main>
+
+        {/* Mobile/Tablet Bottom Navigation Bar */}
+        <div className="lg:hidden flex-shrink-0 p-3 bg-white border-t border-stone-300 flex items-center justify-around z-40">
+          <button
+            type="button"
+            onClick={() => setMobileTab('sidebar')}
+            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-bold tracking-wider transition-all uppercase ${
+              mobileTab === 'sidebar' ? 'text-lime-600' : 'text-stone-500 hover:text-stone-900'
+            }`}
+          >
+            <FileText size={16} />
+            <span>Library</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('matrix')}
+            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-bold tracking-wider transition-all uppercase ${
+              mobileTab === 'matrix' ? 'text-lime-600' : 'text-stone-500 hover:text-stone-900'
+            }`}
+          >
+            <Activity size={16} />
+            <span>Matrix</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMobileTab('chat')}
+            className={`flex flex-col items-center gap-1 text-[10px] font-mono font-bold tracking-wider transition-all uppercase ${
+              mobileTab === 'chat' ? 'text-lime-600' : 'text-stone-500 hover:text-stone-900'
+            }`}
+          >
+            <MessageSquare size={16} className={mobileTab === 'chat' ? 'text-lime-600' : 'text-stone-500'} />
+            <span>DocPilot</span>
+          </button>
+        </div>
       </div>
 
       {/* Step 2: Interactive Graph Node & Edge Relationship Editor Modal */}

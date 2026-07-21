@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Sparkles, Send, CheckCircle2, ArrowRight, ShieldCheck, Zap } from 'lucide-react';
+import { X, Sparkles, Send, CheckCircle2, ArrowRight, Zap } from 'lucide-react';
 
 interface ComingSoonModalProps {
   planTier: string;

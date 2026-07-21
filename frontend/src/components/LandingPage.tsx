@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '../context/AuthContext';
 import { TrustMetricsSection } from './TrustMetricsSection';
 import { ForceGraph } from './ForceGraph';
 import type { Node, Edge } from './ForceGraph';
@@ -14,16 +13,10 @@ import {
   Play, 
   FileText, 
   Sparkles, 
-  Layers, 
   Lock, 
   Activity, 
   ChevronDown,
   ChevronUp,
-  Cpu,
-  Database,
-  Network,
-  Zap,
-  CheckCircle2,
   ArrowDownRight
 } from 'lucide-react';
 
@@ -48,15 +41,15 @@ const heroNodes: Node[] = [
 ];
 
 const heroEdges: Edge[] = [
-  { source_id: 'PUMP-101A', target_id: 'VALVE-102', relation: 'ISOLATED_BY' },
-  { source_id: 'PUMP-101A', target_id: 'MCC-P101', relation: 'POWERED_BY' },
-  { source_id: 'PUMP-101A', target_id: 'SOP-OPS-12', relation: 'GOVERNED_BY' },
-  { source_id: 'SOP-OPS-12', target_id: 'OISD-GDN-115', relation: 'COMPLIES_WITH' },
-  { source_id: 'PUMP-101A', target_id: 'INCIDENT-MAY', relation: 'HISTORICAL_EVENT' },
-  { source_id: 'PUMP-101A', target_id: 'OEM-MANUAL-P101', relation: 'DOCUMENTED_IN' },
-  { source_id: 'VALVE-102', target_id: 'VALVE-103', relation: 'CONNECTED_TO' },
-  { source_id: 'PUMP-101A', target_id: 'GAUGE-PT-201', relation: 'MONITORED_BY' },
-  { source_id: 'VALVE-102', target_id: 'SOP-LOTO-04', relation: 'REQUIRES_LOTO' },
+  { source_id: 'PUMP-101A', target_id: 'VALVE-102', rel_type: 'ISOLATED_BY' },
+  { source_id: 'PUMP-101A', target_id: 'MCC-P101', rel_type: 'POWERED_BY' },
+  { source_id: 'PUMP-101A', target_id: 'SOP-OPS-12', rel_type: 'GOVERNED_BY' },
+  { source_id: 'SOP-OPS-12', target_id: 'OISD-GDN-115', rel_type: 'COMPLIES_WITH' },
+  { source_id: 'PUMP-101A', target_id: 'INCIDENT-MAY', rel_type: 'HISTORICAL_EVENT' },
+  { source_id: 'PUMP-101A', target_id: 'OEM-MANUAL-P101', rel_type: 'DOCUMENTED_IN' },
+  { source_id: 'VALVE-102', target_id: 'VALVE-103', rel_type: 'CONNECTED_TO' },
+  { source_id: 'PUMP-101A', target_id: 'GAUGE-PT-201', rel_type: 'MONITORED_BY' },
+  { source_id: 'VALVE-102', target_id: 'SOP-LOTO-04', rel_type: 'REQUIRES_LOTO' },
 ];
 
 export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onDemoClick, onSelectPricingPlan }) => {
@@ -218,6 +211,135 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onDemoCl
         </div>
       </section>
 
+      {/* Interactive Business Impact Spatial Flowchart */}
+      <section className="py-24 px-6 max-w-6xl mx-auto space-y-12">
+        <div className="text-center space-y-4">
+          <span className="text-xs font-mono uppercase tracking-[0.25em] text-lime-600 font-bold">Industrial Intelligence Mapping</span>
+          <h2 className="text-4xl sm:text-5xl font-black font-display text-stone-950 tracking-tight">
+            Consolidating the Plant Knowledge Crisis
+          </h2>
+          <p className="text-sm sm:text-base text-stone-700 max-w-2xl mx-auto font-light leading-relaxed">
+            How VigilOps unifies fragmented pipelines to stop downtime events and capture disappearing operational knowledge.
+          </p>
+        </div>
+
+        {/* Liquid Glass Spatial Panel Container */}
+        <div className="relative p-8 rounded-[40px] border border-stone-300 bg-[#f0f0ed] shadow-2xl overflow-hidden spatial-perspective">
+          <div className="absolute inset-0 bg-gradient-to-tr from-lime-400/5 to-transparent pointer-events-none" />
+          
+          {/* Animated SVG Pipe Pipelines */}
+          <div className="absolute inset-0 pointer-events-none z-0 hidden lg:block">
+            <svg className="w-full h-full" viewBox="0 0 1100 350">
+              <defs>
+                <linearGradient id="lime-fade" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#a3e635" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#10b981" stopOpacity="0.8" />
+                </linearGradient>
+                <filter id="laser-glow">
+                  <feGaussianBlur stdDeviation="4" result="coloredBlur"/>
+                  <feMerge>
+                    <feMergeNode in="coloredBlur"/>
+                    <feMergeNode in="SourceGraphic"/>
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Connecting pipelines */}
+              <path d="M 280 175 H 480" stroke="#d6d6d0" strokeWidth="4" fill="none" />
+              <path d="M 680 175 H 850" stroke="#d6d6d0" strokeWidth="4" fill="none" />
+
+              {/* Glowing animated flows */}
+              <path d="M 280 175 H 480" stroke="url(#lime-fade)" strokeWidth="3" fill="none" strokeDasharray="12, 12" className="animate-[marquee_8s_linear_infinite]" filter="url(#laser-glow)" />
+              <path d="M 680 175 H 850" stroke="url(#lime-fade)" strokeWidth="3" fill="none" strokeDasharray="12, 12" className="animate-[marquee_6s_linear_infinite]" filter="url(#laser-glow)" />
+            </svg>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-12 relative z-10">
+            {/* Stage 1 Card */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              className="p-7 rounded-3xl bg-white/40 backdrop-blur-md border border-white/50 shadow-lg space-y-5 flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <span className="px-3 py-1 rounded-full text-[9px] font-mono font-black bg-stone-900 text-lime-400 uppercase tracking-widest">
+                  01 / Fragmented Silos
+                </span>
+                <h4 className="text-xl font-bold font-display text-stone-950">The Search Latency Crisis</h4>
+                <p className="text-xs text-stone-750 leading-relaxed font-light">
+                  Plant operators operate across <strong>7 to 12 disconnected systems</strong>. Operating manuals in folders, P&IDs in archives, and work logs in emails.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-stone-300/40 space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-stone-500 font-bold">Shift Search Loss:</span>
+                  <span className="text-red-600 font-black">35% Avg Hours</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-stone-500 font-bold">Data Fragmentation:</span>
+                  <span className="text-red-600 font-black">7-12 Hubs</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Stage 2 Card */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              className="p-7 rounded-3xl bg-white/80 border-2 border-slate-900 shadow-xl space-y-5 flex flex-col justify-between relative"
+            >
+              {/* Highlight badge */}
+              <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 px-4 py-1.5 rounded-full bg-slate-950 text-lime-400 text-[9px] font-mono font-black uppercase tracking-widest shadow-md">
+                Consolidation Hub
+              </div>
+              <div className="space-y-3 pt-2">
+                <span className="px-3 py-1 rounded-full text-[9px] font-mono font-black bg-lime-400 text-slate-950 uppercase tracking-widest">
+                  02 / RAG Graph Engine
+                </span>
+                <h4 className="text-xl font-bold font-display text-stone-950">Topological Consolidation</h4>
+                <p className="text-xs text-stone-700 leading-relaxed font-light">
+                  VigilOps digests raw PDF documentation, links entities semantically into an active 2D Topological graph, and powers bilingual RAG queries.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-stone-300 space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-stone-700 font-bold">RAG Accuracy:</span>
+                  <span className="text-slate-950 font-black">100% Grounded</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-stone-700 font-bold">Query Languages:</span>
+                  <span className="text-slate-950 font-black">Bilingual + Hinglish</span>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* Stage 3 Card */}
+            <motion.div
+              whileHover={{ y: -5 }}
+              className="p-7 rounded-3xl bg-white/40 backdrop-blur-md border border-white/50 shadow-lg space-y-5 flex flex-col justify-between"
+            >
+              <div className="space-y-3">
+                <span className="px-3 py-1 rounded-full text-[9px] font-mono font-black bg-stone-900 text-lime-400 uppercase tracking-widest">
+                  03 / Operations Restored
+                </span>
+                <h4 className="text-xl font-bold font-display text-stone-950">Resolving Downtime</h4>
+                <p className="text-xs text-stone-750 leading-relaxed font-light">
+                  Consolidated search prevents maintenance errors and preserves operational memory as <strong>25% of India's veteran engineers retire</strong>.
+                </p>
+              </div>
+              <div className="pt-4 border-t border-stone-300/40 space-y-2">
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-stone-500 font-bold">Unplanned Downtime:</span>
+                  <span className="text-emerald-600 font-black">-22% Reduction</span>
+                </div>
+                <div className="flex items-center justify-between text-xs font-mono">
+                  <span className="text-stone-500 font-bold">Retirement Risk:</span>
+                  <span className="text-emerald-600 font-black">100% Mitigated</span>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </div>
+      </section>
+
       {/* 4. "Why VigilOps" Factual Telemetry Stats Section */}
       <section id="why" className="py-32 px-6 max-w-6xl mx-auto space-y-16">
         <div className="text-center space-y-4">
@@ -328,191 +450,293 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onLoginClick, onDemoCl
               <p className="text-xs text-stone-700 leading-relaxed font-light">
                 General chat LLMs make up torque limits and gas safety pressures. High-risk plants require 100% strict evidence citations.
               </p>
-            </div>
           </div>
         </div>
+      </div>
       </section>
 
       {/* 6. Solution & Architecture Accordion */}
-      <section id="services" className="py-32 px-6 max-w-5xl mx-auto space-y-16">
+      <section id="services" className="py-32 px-6 max-w-6xl mx-auto space-y-16">
         <div className="text-center space-y-4">
           <span className="text-xs font-mono uppercase tracking-[0.25em] text-lime-600 font-bold">Architecture Overview</span>
           <h2 className="text-4xl sm:text-6xl font-black font-display text-stone-950 tracking-tight">
             VigilOps Engine Components
           </h2>
           <p className="text-sm text-stone-700 max-w-2xl mx-auto font-light leading-relaxed">
-            Click each component below to inspect architectural details, included capabilities, and performance guarantees.
+            Select each component below to inspect live architectural details, blueprints, and performance guarantees.
           </p>
         </div>
 
-        {/* Visual Identity Studio Style Nested Accordion */}
-        <div className="space-y-5">
-          {/* Accordion Item 1 */}
-          <div className="rounded-3xl border border-stone-300 bg-[#f0f0ed] overflow-hidden shadow-xl">
-            <button
-              onClick={() => toggleAccordion(0)}
-              className="w-full p-8 text-left flex items-center justify-between gap-4 focus:outline-none"
-            >
-              <div className="flex items-center gap-5">
-                <div className="p-3.5 rounded-2xl bg-slate-900 text-lime-400">
-                  <FileText size={24} />
+        {/* Visual Identity Studio Style Split layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* Left Column (Accordion Cards) */}
+          <div className="lg:col-span-5 space-y-5">
+            {/* Accordion Item 1 */}
+            <div className="rounded-3xl border border-stone-300/40 liquid-glass overflow-hidden shadow-xl">
+              <button
+                type="button"
+                onClick={() => toggleAccordion(0)}
+                className="w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-slate-900 text-lime-400">
+                    <FileText size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold font-display text-stone-950">
+                      1. Grounded Citation Snippet Inspector
+                    </h3>
+                    <p className="text-[10px] text-stone-600 font-mono mt-0.5">Zero-Hallucination Evidence Matching</p>
+                  </div>
                 </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-stone-950">
-                    1. Grounded Citation Snippet Inspector
-                  </h3>
-                  <p className="text-xs text-stone-600 font-mono mt-1">Zero-Hallucination Evidence Matching</p>
+                <div className="p-1.5 rounded-full bg-stone-300 text-stone-900">
+                  {openAccordion === 0 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
                 </div>
-              </div>
-              <div className="p-2.5 rounded-full bg-stone-300 text-stone-900">
-                {openAccordion === 0 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-            </button>
+              </button>
 
-            <AnimatePresence>
+              <AnimatePresence>
+                {openAccordion === 0 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-6 pb-6 space-y-4 border-t border-stone-300/40 pt-4"
+                  >
+                    <p className="text-xs text-stone-700 font-light leading-relaxed">
+                      DocPilot never generates answers without proof. Every response includes clickable citation chips that immediately expand to show the exact raw text snippet retrieved from SQLite manual archives.
+                    </p>
+
+                    <div>
+                      <h4 className="text-[9px] font-mono uppercase tracking-wider text-stone-950 font-bold mb-2">Capabilities Included:</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          SQLite Raw Context Lookup
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          768-Dim Gemini Vector Embedding
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          1-Click Document Modal Inspector
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          Strict Out-of-Domain Guardrail Fallback
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Accordion Item 2 */}
+            <div className="rounded-3xl border border-stone-300/40 liquid-glass overflow-hidden shadow-xl">
+              <button
+                type="button"
+                onClick={() => toggleAccordion(1)}
+                className="w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-slate-900 text-lime-400">
+                    <Activity size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold font-display text-stone-950">
+                      2. D3 Topological Operations Matrix
+                    </h3>
+                    <p className="text-[10px] text-stone-600 font-mono mt-0.5">2D Force-Directed Inter-Equipment Network</p>
+                  </div>
+                </div>
+                <div className="p-1.5 rounded-full bg-stone-300 text-stone-900">
+                  {openAccordion === 1 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {openAccordion === 1 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-6 pb-6 space-y-4 border-t border-stone-300/40 pt-4"
+                  >
+                    <p className="text-xs text-stone-700 font-light leading-relaxed">
+                      Interactive D3 physics simulation displaying equipment nodes (Assets, Procedures, Regulations, Incidents, Manuals) connected by directional dependency edges. Selecting nodes in DocPilot chat automatically triggers glowing pulse highlights on the matrix!
+                    </p>
+
+                    <div>
+                      <h4 className="text-[9px] font-mono uppercase tracking-wider text-stone-950 font-bold mb-2">Capabilities Included:</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          250 Component Nodes
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          335 Verified Edges
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          Category Filtering Toolbar
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          Real-Time Node Search
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+
+            {/* Accordion Item 3 */}
+            <div className="rounded-3xl border border-stone-300/40 liquid-glass overflow-hidden shadow-xl">
+              <button
+                type="button"
+                onClick={() => toggleAccordion(2)}
+                className="w-full p-6 text-left flex items-center justify-between gap-4 focus:outline-none"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="p-3 rounded-2xl bg-slate-900 text-lime-400">
+                    <Lock size={20} />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold font-display text-stone-950">
+                      3. Multi-Tenant JWT Security & Revocation
+                    </h3>
+                    <p className="text-[10px] text-stone-600 font-mono mt-0.5">Enterprise Workspace Data Isolation</p>
+                  </div>
+                </div>
+                <div className="p-1.5 rounded-full bg-stone-300 text-stone-900">
+                  {openAccordion === 2 ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                </div>
+              </button>
+
+              <AnimatePresence>
+                {openAccordion === 2 && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: 'auto', opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    className="px-6 pb-6 space-y-4 border-t border-stone-300/40 pt-4"
+                  >
+                    <p className="text-xs text-stone-700 font-light leading-relaxed">
+                      Company data isolation enforced at the database query level via JWT bearer tokens. Plant admins can generate isolated employee credentials, upload new manuals, and instantly revoke credentials with 1-click access termination.
+                    </p>
+
+                    <div>
+                      <h4 className="text-[9px] font-mono uppercase tracking-wider text-stone-950 font-bold mb-2">Capabilities Included:</h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          Company Workspace Isolation
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          Admin Credential Generator
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          1-Click Credential Revocation
+                        </span>
+                        <span className="px-2.5 py-1 rounded-full bg-stone-200 text-stone-900 text-[9px] font-mono font-bold border border-stone-300">
+                          Drag-and-Drop Manual Ingestion
+                        </span>
+                      </div>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Right Column (Visual Architecture Blueprint, z-depth parallax container) */}
+          <div className="lg:col-span-7 sticky top-32 p-8 rounded-[40px] border border-stone-300/40 bg-slate-950 shadow-2xl h-[420px] flex flex-col justify-between overflow-hidden spatial-tilt">
+            {/* Ambient Background Glow grid */}
+            <div className="absolute inset-0 bg-[radial-gradient(#a3e635_1px,transparent_1px)] [background-size:24px_24px] opacity-10 pointer-events-none" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-lime-400/5 rounded-full blur-2xl pointer-events-none" />
+
+            <div className="flex items-center justify-between pb-4 border-b border-stone-800 z-10">
+              <span className="text-[10px] font-mono font-bold text-lime-400 uppercase tracking-widest">
+                Active System Component Blueprint
+              </span>
+              <span className="px-3 py-1 rounded-full text-[9px] font-mono bg-stone-900 text-lime-400 font-bold uppercase tracking-wider border border-lime-400/20">
+                {openAccordion === 0 ? 'Grounded RAG Pipeline' : openAccordion === 1 ? 'Topological D3 Physics' : 'JWT Security Shield'}
+              </span>
+            </div>
+
+            <div className="flex-1 flex items-center justify-center p-4 relative z-10">
               {openAccordion === 0 && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="px-8 pb-8 space-y-6 border-t border-stone-300 pt-6"
-                >
-                  <p className="text-sm text-stone-700 font-light leading-relaxed">
-                    DocPilot never generates answers without proof. Every response includes clickable citation chips that immediately expand to show the exact raw text snippet retrieved from SQLite manual archives.
-                  </p>
-
-                  <div>
-                    <h4 className="text-xs font-mono uppercase tracking-wider text-stone-950 font-bold mb-3">Capabilities Included:</h4>
-                    <div className="flex flex-wrap gap-2.5">
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        SQLite Raw Context Lookup
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        768-Dim Gemini Vector Embedding
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        1-Click Document Modal Inspector
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        Strict Out-of-Domain Guardrail Fallback
-                      </span>
+                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                  {/* Grounded Citation Pipeline */}
+                  <div className="flex items-center gap-4 w-full max-w-md justify-around text-center">
+                    <div className="p-3.5 rounded-2xl bg-stone-900 text-lime-400 border border-stone-800 flex flex-col items-center">
+                      <span className="text-[8px] font-mono font-black uppercase text-stone-500">Step 1</span>
+                      <span className="text-xs font-bold font-display mt-1 text-white">Manual PDF</span>
+                    </div>
+                    <svg className="w-12 h-6" viewBox="0 0 50 20">
+                      <path d="M 0 10 H 50" stroke="#a3e635" strokeWidth="2.5" fill="none" strokeDasharray="5,5" className="animate-[marquee_2s_linear_infinite]" />
+                    </svg>
+                    <div className="p-3.5 rounded-2xl bg-stone-900 text-lime-400 border border-lime-400/30 flex flex-col items-center scale-110 shadow-lg">
+                      <span className="text-[8px] font-mono font-black uppercase text-lime-400">Step 2</span>
+                      <span className="text-xs font-black font-display mt-1 text-lime-400">SQLite RAG</span>
+                    </div>
+                    <svg className="w-12 h-6" viewBox="0 0 50 20">
+                      <path d="M 0 10 H 50" stroke="#a3e635" strokeWidth="2.5" fill="none" strokeDasharray="5,5" className="animate-[marquee_2s_linear_infinite]" />
+                    </svg>
+                    <div className="p-3.5 rounded-2xl bg-stone-900 text-lime-400 border border-stone-800 flex flex-col items-center">
+                      <span className="text-[8px] font-mono font-black uppercase text-stone-500">Step 3</span>
+                      <span className="text-xs font-bold font-display mt-1 text-white">Chat RAG</span>
                     </div>
                   </div>
-                </motion.div>
+                  <p className="text-[11px] font-mono text-stone-400 text-center max-w-sm mt-3 leading-relaxed">
+                    Verifiable citation lookup mapping tokens to absolute line numbers, preventing AI hallucinations.
+                  </p>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
 
-          {/* Accordion Item 2 */}
-          <div className="rounded-3xl border border-stone-300 bg-[#f0f0ed] overflow-hidden shadow-xl">
-            <button
-              onClick={() => toggleAccordion(1)}
-              className="w-full p-8 text-left flex items-center justify-between gap-4 focus:outline-none"
-            >
-              <div className="flex items-center gap-5">
-                <div className="p-3.5 rounded-2xl bg-slate-900 text-lime-400">
-                  <Activity size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-stone-950">
-                    2. D3 Topological Operations Matrix
-                  </h3>
-                  <p className="text-xs text-stone-600 font-mono mt-1">2D Force-Directed Inter-Equipment Network</p>
-                </div>
-              </div>
-              <div className="p-2.5 rounded-full bg-stone-300 text-stone-900">
-                {openAccordion === 1 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-            </button>
-
-            <AnimatePresence>
               {openAccordion === 1 && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="px-8 pb-8 space-y-6 border-t border-stone-300 pt-6"
-                >
-                  <p className="text-sm text-stone-700 font-light leading-relaxed">
-                    Interactive D3 physics simulation displaying equipment nodes (Assets, Procedures, Regulations, Incidents, Manuals) connected by directional dependency edges. Selecting nodes in DocPilot chat automatically triggers glowing pulse highlights on the matrix!
-                  </p>
-
-                  <div>
-                    <h4 className="text-xs font-mono uppercase tracking-wider text-stone-950 font-bold mb-3">Capabilities Included:</h4>
-                    <div className="flex flex-wrap gap-2.5">
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        250 Component Nodes
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        335 Verified Edges
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        Category Filtering Toolbar
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        Real-Time Node Search
-                      </span>
-                    </div>
+                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                  {/* Mini D3 Physics Simulator Mockup */}
+                  <div className="relative w-40 h-40 rounded-full border border-stone-800 bg-stone-950 flex items-center justify-center shadow-inner overflow-hidden">
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 rounded-full border border-lime-400/10 animate-ping" />
+                    {/* Nodes & Edges layout */}
+                    <div className="absolute top-6 left-1/2 -translate-x-1/2 w-3 h-3 rounded-full bg-lime-400 shadow-lg pulse-glow-lime" />
+                    <div className="absolute bottom-6 left-6 w-3.5 h-3.5 rounded-full bg-stone-900 border border-stone-700" />
+                    <div className="absolute bottom-6 right-6 w-3.5 h-3.5 rounded-full bg-stone-900 border border-stone-700" />
+                    <div className="absolute top-1/2 left-4 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-stone-900 border border-stone-700" />
+                    <div className="absolute top-1/2 right-4 -translate-y-1/2 w-3.5 h-3.5 rounded-full bg-stone-900 border border-stone-700" />
+                    {/* Connecting SVG lines */}
+                    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 160 160">
+                      <line x1="80" y1="24" x2="24" y2="124" stroke="#444" strokeWidth="1.5" />
+                      <line x1="80" y1="24" x2="136" y2="124" stroke="#444" strokeWidth="1.5" />
+                      <line x1="24" y1="124" x2="16" y2="80" stroke="#444" strokeWidth="1.5" />
+                      <line x1="136" y1="124" x2="144" y2="80" stroke="#444" strokeWidth="1.5" />
+                      <circle cx="80" cy="80" r="7" fill="#ef4444" className="animate-pulse" />
+                    </svg>
                   </div>
-                </motion.div>
+                  <p className="text-[11px] font-mono text-stone-400 text-center max-w-sm leading-relaxed">
+                    D3 Force-Directed Network Graph mapping physical asset dependencies to rules.
+                  </p>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
 
-          {/* Accordion Item 3 */}
-          <div className="rounded-3xl border border-stone-300 bg-[#f0f0ed] overflow-hidden shadow-xl">
-            <button
-              onClick={() => toggleAccordion(2)}
-              className="w-full p-8 text-left flex items-center justify-between gap-4 focus:outline-none"
-            >
-              <div className="flex items-center gap-5">
-                <div className="p-3.5 rounded-2xl bg-slate-900 text-lime-400">
-                  <Lock size={24} />
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold font-display text-stone-950">
-                    3. Multi-Tenant JWT Security & Revocation
-                  </h3>
-                  <p className="text-xs text-stone-600 font-mono mt-1">Enterprise Workspace Data Isolation</p>
-                </div>
-              </div>
-              <div className="p-2.5 rounded-full bg-stone-300 text-stone-900">
-                {openAccordion === 2 ? <ChevronUp size={20} /> : <ChevronDown size={20} />}
-              </div>
-            </button>
-
-            <AnimatePresence>
               {openAccordion === 2 && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  className="px-8 pb-8 space-y-6 border-t border-stone-300 pt-6"
-                >
-                  <p className="text-sm text-stone-700 font-light leading-relaxed">
-                    Company data isolation enforced at the database query level via JWT bearer tokens. Plant admins can generate isolated employee credentials, upload new manuals, and instantly revoke credentials with 1-click access termination.
-                  </p>
-
-                  <div>
-                    <h4 className="text-xs font-mono uppercase tracking-wider text-stone-950 font-bold mb-3">Capabilities Included:</h4>
-                    <div className="flex flex-wrap gap-2.5">
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        Company Workspace Isolation
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        Admin Credential Generator
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        1-Click Credential Revocation
-                      </span>
-                      <span className="px-4 py-2 rounded-full bg-stone-200 text-stone-900 text-xs font-mono font-bold border border-stone-300">
-                        Drag-and-Drop Manual Ingestion
-                      </span>
+                <div className="w-full h-full flex flex-col items-center justify-center space-y-4">
+                  {/* JWT Security Shield */}
+                  <div className="relative w-36 h-36 flex items-center justify-center">
+                    <div className="absolute inset-0 bg-lime-400/5 rounded-full blur-xl animate-pulse" />
+                    <div className="w-20 h-20 rounded-3xl bg-stone-900 border-2 border-lime-400 flex items-center justify-center text-lime-400 shadow-2xl relative z-10">
+                      <Lock size={32} className="animate-bounce" />
                     </div>
+                    {/* Orbiting particles */}
+                    <div className="absolute top-2 left-2 w-3 h-3 rounded-full bg-emerald-400 shadow" />
+                    <div className="absolute bottom-2 right-2 w-3 h-3 rounded-full bg-emerald-400 shadow" />
                   </div>
-                </motion.div>
+                  <p className="text-[11px] font-mono text-stone-400 text-center max-w-sm leading-relaxed">
+                    Multi-tenant secure token layer isolating company schemas and enabling instant access revocation.
+                  </p>
+                </div>
               )}
-            </AnimatePresence>
+            </div>
+
+            <div className="border-t border-stone-800 pt-4 flex items-center justify-between text-[10px] font-mono text-stone-500 z-10">
+              <span>Status: ACTIVE BLUEPRINT RUNNING</span>
+              <span>VigilOps Core Engine v2.4</span>
+            </div>
           </div>
         </div>
       </section>
