@@ -231,23 +231,23 @@ export const AdminDashboard: React.FC = () => {
             <div className="flex flex-col justify-center">
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-base font-display text-stone-950">VigilOps</span>
-                <span className="bg-lime-400 text-slate-950 font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="hidden sm:inline-block bg-lime-400 text-slate-950 font-mono text-[9px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
                   ADMIN CONSOLE
                 </span>
               </div>
-              <p className="text-[10px] font-mono text-stone-600 flex items-center gap-1 mt-0.5">
+              <p className="text-[10px] font-mono text-stone-600 flex items-center gap-1 mt-0.5 max-w-[150px] truncate">
                 <Building2 size={11} /> Workspace: <span className="font-bold text-stone-900">{companyId}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-5">
-            <span className="text-xs font-mono font-bold uppercase tracking-wider px-4 py-1.5 rounded-full bg-stone-300 text-stone-900 border border-stone-400">
+          <div className="flex items-center gap-2 sm:gap-5">
+            <span className="hidden md:inline-block text-xs font-mono font-bold uppercase tracking-wider px-4 py-1.5 rounded-full bg-stone-300 text-stone-900 border border-stone-400">
               WORKSPACE ADMINISTRATOR
             </span>
             <button
               onClick={logout}
-              className="px-6 py-2.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 text-xs font-mono font-extrabold flex items-center gap-1.5 transition-all active:scale-95 uppercase tracking-wider"
+              className="px-4 py-2 sm:px-6 sm:py-2.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 text-[10px] sm:text-xs font-mono font-extrabold flex items-center gap-1.5 transition-all active:scale-95 uppercase tracking-wider"
             >
               <LogOut size={14} /> Log Out
             </button>
@@ -585,7 +585,7 @@ export const AdminDashboard: React.FC = () => {
                   ) : (
                     documents.map((doc) => (
                       <tr key={doc.id} className="hover:bg-stone-200/60 transition-colors">
-                        <td className="py-4 font-bold font-mono text-stone-950">{doc.filename}</td>
+                        <td className="py-4 font-bold font-mono text-stone-950 max-w-[180px] sm:max-w-xs truncate" title={doc.filename}>{doc.filename}</td>
                         <td className="py-4 text-xs text-stone-500 font-mono">
                           {new Date(doc.uploaded_at).toLocaleString()}
                         </td>
