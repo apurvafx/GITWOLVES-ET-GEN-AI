@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException, Header, status, UploadFile,
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from fastapi.middleware.cors import CORSMiddleware
 from database import init_db, get_db_connection
-from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest, AddNodeRequest, AddEdgeRequest, TranslateRequest
+from models import RegisterCompanyRequest, LoginRequest, CreateEmployeeRequest, ChatRequest, AddNodeRequest, AddEdgeRequest, TranslateRequest, CreateLotoRequest
 import auth
 import secrets
 import io
@@ -225,7 +225,7 @@ def delete_document(doc_id: str, admin: dict = Depends(require_admin)):
 
 @app.get("/api/graph/network")
 def get_graph_network(user: dict = Depends(get_current_user)):
-    """Returns all nodes and edges in the company's knowledge graph."""
+    """Returns all nodes and edges in the company's knowledge graph plus LOTO locked node IDs."""
     company_id = user["company_id"]
     
     conn = get_db_connection()
@@ -237,8 +237,21 @@ def get_graph_network(user: dict = Depends(get_current_user)):
     cursor.execute("SELECT source_id, target_id, rel_type FROM graph_edges WHERE company_id = ?", (company_id,))
     edges = [dict(row) for row in cursor.fetchall()]
     
+    # Query LOTO locked nodes
+    cursor.execute("SELECT asset_id, isolation_steps FROM loto_permits WHERE company_id = ? AND status = 'approved'", (company_id,))
+    loto_rows = cursor.fetchall()
+    locked_nodes = set()
+    for r in loto_rows:
+        locked_nodes.add(r["asset_id"])
+        try:
+            steps = json.loads(r["isolation_steps"])
+            for s_node in steps:
+                locked_nodes.add(s_node)
+        except Exception:
+            pass
+            
     conn.close()
-    return {"nodes": nodes, "edges": edges}
+    return {"nodes": nodes, "edges": edges, "loto_locked_nodes": list(locked_nodes)}
 
 import json
 
@@ -519,3 +532,92 @@ def run_live_evaluation():
             ]
         }
     }
+
+@app.post("/api/loto/request", status_code=status.HTTP_201_CREATED)
+def create_loto_permit(payload: CreateLotoRequest, user: dict = Depends(get_current_user)):
+    """Creates a new LOTO safety isolation permit request."""
+    company_id = user["company_id"]
+    username = user["username"]
+    permit_id = f"loto_{secrets.token_hex(4)}"
+    
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO loto_permits (id, asset_id, isolation_steps, requested_by, status, company_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (
+                permit_id,
+                payload.asset_id.upper(),
+                json.dumps(payload.isolation_steps),
+                username,
+                "pending",
+                company_id,
+                datetime.utcnow().isoformat()
+            )
+        )
+        conn.commit()
+        return {"message": "LOTO permit request submitted successfully.", "permit_id": permit_id}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.get("/api/loto/list")
+def list_loto_permits(user: dict = Depends(get_current_user)):
+    """Lists all LOTO permits for the logged-in user's company."""
+    company_id = user["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, asset_id, isolation_steps, requested_by, status, created_at FROM loto_permits WHERE company_id = ? ORDER BY created_at DESC", (company_id,))
+    rows = cursor.fetchall()
+    conn.close()
+    
+    permits = []
+    for r in rows:
+        permits.append({
+            "id": r["id"],
+            "asset_id": r["asset_id"],
+            "isolation_steps": json.loads(r["isolation_steps"]) if r["isolation_steps"] else [],
+            "requested_by": r["requested_by"],
+            "status": r["status"],
+            "created_at": r["created_at"]
+        })
+    return permits
+
+@app.post("/api/admin/loto/{permit_id}/approve")
+def approve_loto_permit(permit_id: str, admin: dict = Depends(require_admin)):
+    """Allows plant managers to approve and activate the physical lock-out isolation."""
+    company_id = admin["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE loto_permits SET status = 'approved' WHERE id = ? AND company_id = ?", (permit_id, company_id))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Permit not found or access denied.")
+        conn.commit()
+        return {"message": "LOTO permit approved and active."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+
+@app.post("/api/admin/loto/{permit_id}/release")
+def release_loto_permit(permit_id: str, admin: dict = Depends(require_admin)):
+    """Allows plant managers to release locks and restore normal operational status."""
+    company_id = admin["company_id"]
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE loto_permits SET status = 'released' WHERE id = ? AND company_id = ?", (permit_id, company_id))
+        if cursor.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Permit not found or access denied.")
+        conn.commit()
+        return {"message": "LOTO permit released and equipment restored to service."}
+    except Exception as e:
+        conn.rollback()
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        conn.close()
+

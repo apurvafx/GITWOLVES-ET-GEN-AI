@@ -18,7 +18,8 @@ import {
   Check,
   X,
   Eye,
-  EyeOff
+  EyeOff,
+  Gauge
 } from 'lucide-react';
 
 export const AdminDashboard: React.FC = () => {
@@ -45,6 +46,10 @@ export const AdminDashboard: React.FC = () => {
   // Pull Request Graph Proposals (GitHub PR Workflow)
   const [proposals, setProposals] = useState<any[]>([]);
   const [processingPrId, setProcessingPrId] = useState<string | null>(null);
+
+  // LOTO Permits (Step 7)
+  const [lotoPermits, setLotoPermits] = useState<any[]>([]);
+  const [processingLotoId, setProcessingLotoId] = useState<string | null>(null);
 
   const fetchEmployees = async () => {
     try {
@@ -73,10 +78,44 @@ export const AdminDashboard: React.FC = () => {
     }
   };
 
+  const fetchLotoPermits = async () => {
+    try {
+      const res = await api.get('/api/loto/list');
+      setLotoPermits(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch LOTO permits:', err);
+    }
+  };
+
+  const handleApproveLoto = async (permitId: string) => {
+    setProcessingLotoId(permitId);
+    try {
+      await api.post(`/api/admin/loto/${permitId}/approve`);
+      fetchLotoPermits();
+    } catch (err) {
+      console.error('Failed to approve LOTO:', err);
+    } finally {
+      setProcessingLotoId(null);
+    }
+  };
+
+  const handleReleaseLoto = async (permitId: string) => {
+    setProcessingLotoId(permitId);
+    try {
+      await api.post(`/api/admin/loto/${permitId}/release`);
+      fetchLotoPermits();
+    } catch (err) {
+      console.error('Failed to release LOTO:', err);
+    } finally {
+      setProcessingLotoId(null);
+    }
+  };
+
   useEffect(() => {
     fetchEmployees();
     fetchDocuments();
     fetchProposals();
+    fetchLotoPermits();
   }, []);
 
   const togglePasswordVisibility = (empId: string) => {
@@ -292,6 +331,85 @@ export const AdminDashboard: React.FC = () => {
                     >
                       <X size={12} /> Reject
                     </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+        {/* LOTO Safety Isolation Permits Card (Step 7) */}
+        {lotoPermits.length > 0 && (
+          <div className="p-7 rounded-3xl border border-red-400/50 bg-red-50/50 shadow-xl space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-2xl bg-red-950 text-red-400">
+                  <Gauge size={20} />
+                </div>
+                <div>
+                  <h3 className="font-bold font-display text-base text-stone-950">
+                    Digital LOTO Safety Isolation Console
+                  </h3>
+                  <p className="text-xs text-stone-600">Review energy isolation checklists, approve Lock-Outs, or release locks to restore operation.</p>
+                </div>
+              </div>
+              <span className="px-3.5 py-1 rounded-full text-xs font-mono font-black bg-red-200 text-red-900 border border-red-400">
+                {lotoPermits.filter(p => p.status === 'pending').length} Pending Approve
+              </span>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              {lotoPermits.map((permit) => (
+                <div key={permit.id} className="p-4 rounded-2xl border border-red-200 bg-white space-y-3 shadow-sm text-xs">
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono font-black text-stone-950 uppercase text-[10px] flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${permit.status === 'approved' ? 'bg-red-650 animate-ping' : 'bg-amber-500'}`} />
+                      Asset: {permit.asset_id}
+                    </span>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[9px] font-mono font-black uppercase tracking-wider ${
+                        permit.status === 'approved'
+                          ? 'bg-red-100 text-red-700 border border-red-200'
+                          : permit.status === 'pending'
+                          ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                          : 'bg-stone-100 text-stone-600 border border-stone-200'
+                      }`}
+                    >
+                      {permit.status}
+                    </span>
+                  </div>
+
+                  <div className="font-mono space-y-1 text-stone-700 leading-tight">
+                    <p>Requested By: <span className="font-bold text-stone-900">@{permit.requested_by}</span></p>
+                    <p>Request Time: <span className="font-mono text-stone-500">{new Date(permit.created_at).toLocaleString()}</span></p>
+                    {permit.isolation_steps.length > 0 && (
+                      <p>
+                        Isolation Checklist: <span className="font-bold text-red-700">{permit.isolation_steps.join(', ')}</span>
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-1">
+                    {permit.status === 'pending' && (
+                      <button
+                        onClick={() => handleApproveLoto(permit.id)}
+                        disabled={processingLotoId === permit.id}
+                        className="flex-1 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white font-mono font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md active:scale-95 disabled:opacity-50"
+                      >
+                        <Check size={12} /> Sign-Off & Approve LOTO
+                      </button>
+                    )}
+                    {permit.status === 'approved' && (
+                      <button
+                        onClick={() => handleReleaseLoto(permit.id)}
+                        disabled={processingLotoId === permit.id}
+                        className="flex-1 py-2 rounded-full bg-slate-950 hover:bg-slate-800 text-lime-400 font-mono font-bold text-[11px] uppercase tracking-wider flex items-center justify-center gap-1 shadow-md active:scale-95 disabled:opacity-50"
+                      >
+                        <Check size={12} /> Release locks & Restore ops
+                      </button>
+                    )}
+                    {permit.status === 'released' && (
+                      <p className="text-[10px] font-mono text-stone-400 italic">Locks successfully released. Restored.</p>
+                    )}
                   </div>
                 </div>
               ))}

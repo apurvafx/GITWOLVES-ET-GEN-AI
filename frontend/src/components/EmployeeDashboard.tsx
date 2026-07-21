@@ -76,6 +76,16 @@ export const EmployeeDashboard: React.FC = () => {
   const [timelineIndex, setTimelineIndex] = useState<number>(0);
   const [isTimelinePlaying, setIsTimelinePlaying] = useState<boolean>(false);
 
+  // LOTO Permits & Lock-Out states (Step 7)
+  const [lotoPermits, setLotoPermits] = useState<any[]>([]);
+  const [lotoLockedNodes, setLotoLockedNodes] = useState<string[]>([]);
+  const [showLotoModal, setShowLotoModal] = useState<boolean>(false);
+  const [newLotoAssetId, setNewLotoAssetId] = useState<string>('');
+  const [newLotoIsolations, setNewLotoIsolations] = useState<string[]>([]);
+  const [lotoSubmitting, setLotoSubmitting] = useState<boolean>(false);
+  const [lotoError, setLotoError] = useState<string | null>(null);
+  const [lotoSuccess, setLotoSuccess] = useState<string | null>(null);
+
   // Graph Editor Modal State (Step 2)
   const [showGraphEditor, setShowGraphEditor] = useState(false);
   const [editorTab, setEditorTab] = useState<'node' | 'edge'>('node');
@@ -166,9 +176,13 @@ export const EmployeeDashboard: React.FC = () => {
       const network = graphResponse.data;
       setNodes(network.nodes || []);
       setEdges(network.edges || []);
+      setLotoLockedNodes(network.loto_locked_nodes || []);
 
       const docsResponse = await api.get('/api/docs/list');
       setDocuments(docsResponse.data);
+
+      const lotoResponse = await api.get('/api/loto/list');
+      setLotoPermits(lotoResponse.data || []);
     } catch (err: any) {
       console.error('Failed to retrieve employee dashboard data:', err);
     }
@@ -233,6 +247,41 @@ export const EmployeeDashboard: React.FC = () => {
     }
   };
 
+  const handleCreateLoto = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newLotoAssetId) return;
+    setLotoSubmitting(true);
+    setLotoError(null);
+    setLotoSuccess(null);
+    try {
+      await api.post('/api/loto/request', {
+        asset_id: newLotoAssetId,
+        isolation_steps: newLotoIsolations
+      });
+      setLotoSuccess("LOTO safety permit requested successfully. Awaiting Admin sign-off.");
+      setNewLotoAssetId('');
+      setNewLotoIsolations([]);
+      setTimeout(() => {
+        setShowLotoModal(false);
+        setLotoSuccess(null);
+      }, 2000);
+      fetchData();
+    } catch (err: any) {
+      setLotoError(err.response?.data?.detail || "Failed to submit LOTO request.");
+    } finally {
+      setLotoSubmitting(false);
+    }
+  };
+
+  const assetNodes = useMemo(() => {
+    return nodes.filter(n => n.type === 'asset');
+  }, [nodes]);
+
+  const nonAssetNodes = useMemo(() => {
+    return nodes.filter(n => n.type !== 'document' && n.type !== 'regulation');
+  }, [nodes]);
+
+
   const filteredNodes = useMemo(() => {
     let result = nodes;
     if (selectedCategory !== 'all') {
@@ -295,38 +344,100 @@ export const EmployeeDashboard: React.FC = () => {
       <div className="flex-1 flex overflow-hidden min-h-0 p-4 gap-4">
         {/* Left Sidebar */}
         <aside className="w-64 rounded-3xl border border-stone-300 bg-[#f0f0ed] backdrop-blur-2xl flex flex-col flex-shrink-0 shadow-xl overflow-hidden">
-          <div className="p-4 border-b border-stone-300 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText size={16} className="text-stone-950" />
-              <h3 className="font-bold text-xs font-display text-stone-950">Document Library</h3>
+          {/* Document Library (Top half) */}
+          <div className="h-[50%] flex flex-col min-h-0 border-b border-stone-300">
+            <div className="p-4 border-b border-stone-300 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <FileText size={16} className="text-stone-950" />
+                <h3 className="font-bold text-xs font-display text-stone-950">Document Library</h3>
+              </div>
+              <span className="text-[10px] font-mono font-bold text-stone-500">{documents.length}</span>
             </div>
-            <span className="text-[10px] font-mono font-bold text-stone-500">{documents.length}</span>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {documents.length === 0 ? (
+                <p className="text-xs text-stone-500 italic p-2">
+                  No technical manuals uploaded yet by Admin.
+                </p>
+              ) : (
+                documents.map((doc) => (
+                  <button
+                    key={doc.id}
+                    onClick={() => handleManualClick(doc.id)}
+                    disabled={fetchingManual}
+                    className="w-full text-left p-3.5 rounded-2xl border border-stone-300 hover:border-stone-950 bg-white cursor-pointer transition-all flex items-center gap-3 disabled:opacity-50 group"
+                  >
+                    <Bookmark size={14} className="text-stone-900 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <div className="min-w-0">
+                      <p className="text-xs font-mono font-bold truncate text-stone-950">
+                        {doc.filename}
+                      </p>
+                      <p className="text-[9px] font-mono text-stone-500 mt-0.5">
+                        {new Date(doc.uploaded_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
           </div>
-          <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0">
-            {documents.length === 0 ? (
-              <p className="text-xs text-stone-500 italic p-2">
-                No technical manuals uploaded yet by Admin.
-              </p>
-            ) : (
-              documents.map((doc) => (
-                <button
-                  key={doc.id}
-                  onClick={() => handleManualClick(doc.id)}
-                  disabled={fetchingManual}
-                  className="w-full text-left p-3.5 rounded-2xl border border-stone-300 hover:border-stone-950 bg-white cursor-pointer transition-all flex items-center gap-3 disabled:opacity-50 group"
-                >
-                  <Bookmark size={14} className="text-stone-900 flex-shrink-0 group-hover:scale-110 transition-transform" />
-                  <div className="min-w-0">
-                    <p className="text-xs font-mono font-bold truncate text-stone-950">
-                      {doc.filename}
-                    </p>
-                    <p className="text-[9px] font-mono text-stone-500 mt-0.5">
-                      {new Date(doc.uploaded_at).toLocaleDateString()}
-                    </p>
+
+          {/* LOTO Safety Lock-Out (Bottom half) */}
+          <div className="flex-1 flex flex-col min-h-0">
+            <div className="p-4 border-b border-stone-300 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Gauge size={16} className="text-stone-950" />
+                <h3 className="font-bold text-xs font-display text-stone-950">LOTO Lock-Out</h3>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLotoModal(true);
+                  setLotoError(null);
+                  setLotoSuccess(null);
+                }}
+                className="px-2.5 py-1 rounded-full text-[9px] font-mono font-black uppercase tracking-wider bg-slate-950 text-lime-400 hover:bg-slate-800 transition-all active:scale-95 shadow"
+              >
+                + LOTO
+              </button>
+            </div>
+            <div className="flex-1 overflow-y-auto p-3 space-y-2">
+              {lotoPermits.length === 0 ? (
+                <p className="text-xs text-stone-500 italic p-2 text-center text-stone-400">
+                  No active or pending LOTO permits.
+                </p>
+              ) : (
+                lotoPermits.map((permit) => (
+                  <div
+                    key={permit.id}
+                    className="p-3 rounded-2xl border border-stone-350 bg-white space-y-1.5 shadow-sm"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-mono font-black text-stone-950 uppercase">
+                        {permit.asset_id}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[8px] font-mono font-black uppercase tracking-wider ${
+                          permit.status === 'approved'
+                            ? 'bg-red-100 text-red-700 border border-red-200 animate-pulse'
+                            : permit.status === 'pending'
+                            ? 'bg-amber-100 text-amber-700 border border-amber-200'
+                            : 'bg-stone-100 text-stone-600 border border-stone-200'
+                        }`}
+                      >
+                        {permit.status === 'approved' ? 'LOCKED' : permit.status}
+                      </span>
+                    </div>
+                    <div className="text-[9px] text-stone-600 font-mono space-y-0.5 leading-tight">
+                      <p>Worker: <span className="font-bold text-stone-900">{permit.requested_by}</span></p>
+                      {permit.isolation_steps.length > 0 && (
+                        <p className="truncate">
+                          Isolate: <span className="font-bold text-stone-900">{permit.isolation_steps.join(', ')}</span>
+                        </p>
+                      )}
+                    </div>
                   </div>
-                </button>
-              ))
-            )}
+                ))
+              )}
+            </div>
           </div>
         </aside>
 
@@ -404,6 +515,7 @@ export const EmployeeDashboard: React.FC = () => {
                 theme="dark"
                 onNodeClick={(id) => handleNodeFocus(id)}
                 activePropagationNodes={activePropagationNodes}
+                lotoLockedNodes={lotoLockedNodes}
               />
             </div>
 
@@ -723,6 +835,110 @@ export const EmployeeDashboard: React.FC = () => {
                 Close Document
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* LOTO Safety isolation permit request Modal */}
+      {showLotoModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+          <div className="bg-[#f0f0ed] border border-stone-300 rounded-3xl w-full max-w-md p-7 relative shadow-2xl space-y-4">
+            <button
+              onClick={() => setShowLotoModal(false)}
+              className="absolute top-6 right-6 p-2 rounded-full bg-stone-200 hover:bg-stone-300 text-stone-600"
+            >
+              <X size={16} />
+            </button>
+            
+            <div className="flex items-center gap-2">
+              <Gauge className="text-stone-950" size={18} />
+              <h3 className="text-base font-bold font-display text-stone-950">
+                Request LOTO Safety Isolation
+              </h3>
+            </div>
+
+            {lotoError && (
+              <div className="p-3 rounded-2xl bg-red-500/10 border border-red-500/30 text-red-600 text-xs font-mono">
+                {lotoError}
+              </div>
+            )}
+            {lotoSuccess && (
+              <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-700 text-xs font-mono">
+                {lotoSuccess}
+              </div>
+            )}
+
+            <form onSubmit={handleCreateLoto} className="space-y-4">
+              <div>
+                <label className="block text-xs font-mono font-bold text-stone-600 uppercase mb-1.5">
+                  Target Asset to Maintain
+                </label>
+                <select
+                  required
+                  value={newLotoAssetId}
+                  onChange={(e) => {
+                    setNewLotoAssetId(e.target.value);
+                    setNewLotoIsolations([]);
+                  }}
+                  className="w-full px-4 py-3 rounded-2xl border border-stone-300 bg-white text-xs text-stone-900 font-mono focus:ring-1 focus:ring-lime-400"
+                >
+                  <option value="">-- Choose Asset --</option>
+                  {assetNodes.map((node) => (
+                    <option key={node.id} value={node.id}>
+                      {node.id} - {node.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {newLotoAssetId && (
+                <div className="space-y-2">
+                  <label className="block text-xs font-mono font-bold text-stone-600 uppercase mb-1">
+                    Select Isolation Points
+                  </label>
+                  <p className="text-[10px] text-stone-500 leading-tight">
+                    Which connected valves or electrical breakers must be isolated?
+                  </p>
+                  <div className="max-h-36 overflow-y-auto border border-stone-300 bg-white rounded-2xl p-3 space-y-2">
+                    {nonAssetNodes.length === 0 ? (
+                      <p className="text-[10px] text-stone-400 italic">No nodes available.</p>
+                    ) : (
+                      nonAssetNodes.map((node) => {
+                        const isChecked = newLotoIsolations.includes(node.id);
+                        return (
+                          <label
+                            key={node.id}
+                            className="flex items-center gap-2 text-xs font-mono text-stone-800 cursor-pointer"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={isChecked}
+                              onChange={() => {
+                                if (isChecked) {
+                                  setNewLotoIsolations(prev => prev.filter(id => id !== node.id));
+                                } else {
+                                  setNewLotoIsolations(prev => [...prev, node.id]);
+                                }
+                              }}
+                              className="rounded border-stone-300 text-red-500 focus:ring-red-500"
+                            />
+                            <span>{node.id} ({node.name})</span>
+                          </label>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={lotoSubmitting || !newLotoAssetId}
+                className="w-full py-3.5 rounded-full bg-slate-950 hover:bg-slate-800 text-lime-400 font-mono text-xs uppercase tracking-wider font-black shadow-lg transition-all active:scale-95 disabled:opacity-50"
+              >
+                {lotoSubmitting ? 'Submitting...' : 'Submit LOTO Safety Permit'}
+              </button>
+            </form>
           </div>
         </div>
       )}

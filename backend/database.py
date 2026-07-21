@@ -118,6 +118,20 @@ def init_db():
         FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
     );
     """)
+
+    # 9. Digital LOTO Permits (Step 7)
+    cursor.execute("""
+    CREATE TABLE IF NOT EXISTS loto_permits (
+        id TEXT PRIMARY KEY,
+        asset_id TEXT NOT NULL,
+        isolation_steps TEXT NOT NULL, -- JSON list of isolation details
+        requested_by TEXT NOT NULL,
+        status TEXT CHECK(status IN ('pending', 'approved', 'released')) NOT NULL,
+        company_id TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        FOREIGN KEY(company_id) REFERENCES companies(id) ON DELETE CASCADE
+    );
+    """)
     
     conn.commit()
     conn.close()

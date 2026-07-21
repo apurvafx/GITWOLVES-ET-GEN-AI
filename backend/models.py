@@ -30,3 +30,8 @@ class TranslateRequest(BaseModel):
     text: str = Field(..., min_length=1)
     target_lang: str = Field(default="Hindi")
 
+class CreateLotoRequest(BaseModel):
+    asset_id: str = Field(..., min_length=1)
+    isolation_steps: list[str] = Field(default=[])
+
+

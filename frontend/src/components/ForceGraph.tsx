@@ -20,6 +20,7 @@ interface ForceGraphProps {
   theme?: 'light' | 'dark';
   onNodeClick?: (nodeId: string) => void;
   activePropagationNodes?: string[];
+  lotoLockedNodes?: string[];
 }
 
 export const ForceGraph: React.FC<ForceGraphProps> = ({
@@ -28,6 +29,7 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
   focusedNodeId,
   onNodeClick,
   activePropagationNodes = [],
+  lotoLockedNodes = [],
 }) => {
   const fgRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement | null>(null);
@@ -143,9 +145,26 @@ export const ForceGraph: React.FC<ForceGraphProps> = ({
     ctx.arc(node.x, node.y, r, 0, 2 * Math.PI, false);
     ctx.fillStyle = isActivePropagation ? '#ef4444' : colorCore;
     ctx.fill();
-    ctx.strokeStyle = isFocused || isActivePropagation ? '#ef4444' : '#050508';
-    ctx.lineWidth = 1.5;
     ctx.stroke();
+
+    // LOTO lock indicator (Step 7)
+    if (lotoLockedNodes.includes(node.id)) {
+      ctx.beginPath();
+      ctx.arc(node.x + 8, node.y - 8, 4.5, 0, 2 * Math.PI, false);
+      ctx.fillStyle = '#facc15'; // Bright Yellow LOTO lock color
+      ctx.fill();
+      ctx.strokeStyle = '#000000';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillStyle = '#000000';
+      ctx.font = `900 ${Math.max(6 / globalScale, 3.5)}px monospace`;
+      ctx.fillText('L', node.x + 8, node.y - 8);
+      ctx.restore();
+    }
 
     // 4. Clean Label Typography
     ctx.textAlign = 'center';
