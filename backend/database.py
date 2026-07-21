@@ -133,31 +133,71 @@ def init_db():
     );
     """)
     
-    # Auto-seed default demo admin credentials if they do not exist
-    cursor.execute("SELECT id FROM users WHERE username = ?", ("admin_refinery",))
-    if not cursor.fetchone():
-        import hashlib
-        import secrets
-        
-        company_id = secrets.token_hex(8)
-        admin_id = secrets.token_hex(8)
-        created_at = datetime.utcnow().isoformat()
-        
-        password = "SafePassword123!"
-        salt = os.urandom(16).hex()
-        pwd_bytes = password.encode('utf-8')
-        salt_bytes = bytes.fromhex(salt)
-        pwd_hash = hashlib.pbkdf2_hmac('sha256', pwd_bytes, salt_bytes, 100000).hex()
-        
-        cursor.execute(
-            "INSERT INTO companies (id, name, created_at) VALUES (?, ?, ?)",
-            (company_id, "Test Refinery Corp", created_at)
-        )
-        cursor.execute(
-            "INSERT INTO users (id, username, password_hash, password_plain, salt, role, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
-            (admin_id, "admin_refinery", pwd_hash, password, salt, 'admin', company_id)
-        )
-        print("Demo credentials 'admin_refinery' auto-seeded successfully.")
+    # Check if database has any users. If completely empty, seed from database_seed.json if available
+    cursor.execute("SELECT COUNT(*) FROM users;")
+    user_count = cursor.fetchone()[0]
+    
+    if user_count == 0:
+        import json
+        seed_file = os.path.join(os.path.dirname(os.path.abspath(__file__)), "database_seed.json")
+        if os.path.exists(seed_file):
+            print("Found database_seed.json. Seeding database state...", flush=True)
+            try:
+                with open(seed_file, "r", encoding="utf-8") as f:
+                    seed_data = json.load(f)
+                
+                # Ingest tables in dependency order
+                for row in seed_data.get("companies", []):
+                    cursor.execute("INSERT OR IGNORE INTO companies (id, name, created_at) VALUES (?, ?, ?);",
+                                   (row["id"], row["name"], row["created_at"]))
+                for row in seed_data.get("users", []):
+                    cursor.execute("INSERT OR IGNORE INTO users (id, username, password_hash, password_plain, salt, role, company_id) VALUES (?, ?, ?, ?, ?, ?, ?);",
+                                   (row["id"], row["username"], row["password_hash"], row.get("password_plain"), row["salt"], row["role"], row["company_id"]))
+                for row in seed_data.get("documents", []):
+                    cursor.execute("INSERT OR IGNORE INTO documents (id, filename, content, company_id, uploaded_at) VALUES (?, ?, ?, ?, ?);",
+                                   (row["id"], row["filename"], row["content"], row["company_id"], row["uploaded_at"]))
+                for row in seed_data.get("doc_chunks", []):
+                    cursor.execute("INSERT OR IGNORE INTO doc_chunks (id, doc_id, content, embedding, company_id) VALUES (?, ?, ?, ?, ?);",
+                                   (row["id"], row["doc_id"], row["content"], row.get("embedding"), row["company_id"]))
+                for row in seed_data.get("graph_nodes", []):
+                    cursor.execute("INSERT OR IGNORE INTO graph_nodes (id, name, type, company_id) VALUES (?, ?, ?, ?);",
+                                   (row["id"], row["name"], row["type"], row["company_id"]))
+                for row in seed_data.get("graph_edges", []):
+                    cursor.execute("INSERT OR IGNORE INTO graph_edges (id, source_id, target_id, rel_type, company_id) VALUES (?, ?, ?, ?, ?);",
+                                   (row["id"], row["source_id"], row["target_id"], row["rel_type"], row["company_id"]))
+                for row in seed_data.get("graph_proposals", []):
+                    cursor.execute("INSERT OR IGNORE INTO graph_proposals (id, proposal_type, item_data, proposed_by, status, company_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?);",
+                                   (row["id"], row["proposal_type"], row["item_data"], row["proposed_by"], row["status"], row["company_id"], row["created_at"]))
+                for row in seed_data.get("loto_permits", []):
+                    cursor.execute("INSERT OR IGNORE INTO loto_permits (id, asset_id, isolation_steps, requested_by, status, company_id, created_at) VALUES (?, ?, ?, ?, ?, ?, ?);",
+                                   (row["id"], row["asset_id"], row["isolation_steps"], row["requested_by"], row["status"], row["company_id"], row["created_at"]))
+                print("Database tables fully seeded from JSON blueprint state.", flush=True)
+            except Exception as e:
+                print(f"Error seeding database from JSON: {e}", flush=True)
+        else:
+            # Fallback to single user seeding if seed file is missing
+            import hashlib
+            import secrets
+            
+            company_id = secrets.token_hex(8)
+            admin_id = secrets.token_hex(8)
+            created_at = datetime.utcnow().isoformat()
+            
+            password = "SafePassword123!"
+            salt = os.urandom(16).hex()
+            pwd_bytes = password.encode('utf-8')
+            salt_bytes = bytes.fromhex(salt)
+            pwd_hash = hashlib.pbkdf2_hmac('sha256', pwd_bytes, salt_bytes, 100000).hex()
+            
+            cursor.execute(
+                "INSERT INTO companies (id, name, created_at) VALUES (?, ?, ?)",
+                (company_id, "Test Refinery Corp", created_at)
+            )
+            cursor.execute(
+                "INSERT INTO users (id, username, password_hash, password_plain, salt, role, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                (admin_id, "admin_refinery", pwd_hash, password, salt, 'admin', company_id)
+            )
+            print("Demo credentials 'admin_refinery' auto-seeded successfully.", flush=True)
     
     conn.commit()
     conn.close()

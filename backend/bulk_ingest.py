@@ -41,6 +41,10 @@ def run_bulk_ingestion():
     project_root = os.path.dirname(backend_dir)
     data_dir = os.path.join(project_root, "data")
 
+    # Fallback for deployment environments where root is backend
+    if not os.path.exists(data_dir):
+        data_dir = os.path.join(backend_dir, "data")
+
     if not os.path.exists(data_dir):
         print(f"ERROR: Data directory not found at {data_dir}", flush=True)
         return

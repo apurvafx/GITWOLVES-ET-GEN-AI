@@ -17,6 +17,15 @@ import graph_parser
 # Initialize Database on Startup
 init_db()
 
+# Run background bulk data ingestion on startup
+try:
+    from bulk_ingest import run_bulk_ingestion
+    import threading
+    threading.Thread(target=run_bulk_ingestion, daemon=True).start()
+    print("Background bulk ingestion thread started.")
+except Exception as e:
+    print(f"Failed to start bulk data ingestion: {e}")
+
 app = FastAPI(
     title="Industrial Knowledge Intelligence API",
     description="Multi-tenant Asset & Operations Brain backend",
