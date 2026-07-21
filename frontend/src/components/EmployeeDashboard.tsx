@@ -349,7 +349,7 @@ export const EmployeeDashboard: React.FC = () => {
       {/* Workspace Layout */}
       <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 p-4 gap-4">
         {/* Left Sidebar */}
-        <aside className={`rounded-3xl border border-stone-300/40 liquid-glass flex-col flex-shrink-0 shadow-2xl overflow-hidden ${mobileTab === 'sidebar' ? 'flex w-full h-full' : 'hidden lg:flex w-64 h-full'}`}>
+        <aside className={`rounded-3xl border border-stone-300/40 liquid-glass flex-col flex-shrink-0 shadow-2xl overflow-hidden ${mobileTab === 'sidebar' ? 'flex w-full h-full' : 'hidden lg:flex lg:w-60 xl:w-64 lg:h-full'}`}>
           {/* Document Library (Top half) */}
           <div className="h-[50%] flex flex-col min-h-0 border-b border-stone-300">
             <div className="p-4 border-b border-stone-300 flex items-center justify-between">
@@ -770,7 +770,7 @@ export const EmployeeDashboard: React.FC = () => {
             </div>
           </div>
 
-          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:w-[38%] lg:min-w-[420px] flex-shrink-0'}`}>
+          <div className={`flex-col gap-2 h-full min-h-0 ${mobileTab === 'chat' ? 'flex w-full' : 'hidden lg:flex lg:w-[32%] xl:w-[38%] lg:min-w-[320px] xl:min-w-[420px] flex-shrink-0'}`}>
             <DocPilotChat onNodeFocus={handleNodeFocus} />
           </div>
         </main>
