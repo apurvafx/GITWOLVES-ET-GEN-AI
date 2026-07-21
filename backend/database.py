@@ -133,6 +133,32 @@ def init_db():
     );
     """)
     
+    # Auto-seed default demo admin credentials if they do not exist
+    cursor.execute("SELECT id FROM users WHERE username = ?", ("admin_refinery",))
+    if not cursor.fetchone():
+        import hashlib
+        import secrets
+        
+        company_id = secrets.token_hex(8)
+        admin_id = secrets.token_hex(8)
+        created_at = datetime.utcnow().isoformat()
+        
+        password = "SafePassword123!"
+        salt = os.urandom(16).hex()
+        pwd_bytes = password.encode('utf-8')
+        salt_bytes = bytes.fromhex(salt)
+        pwd_hash = hashlib.pbkdf2_hmac('sha256', pwd_bytes, salt_bytes, 100000).hex()
+        
+        cursor.execute(
+            "INSERT INTO companies (id, name, created_at) VALUES (?, ?, ?)",
+            (company_id, "Test Refinery Corp", created_at)
+        )
+        cursor.execute(
+            "INSERT INTO users (id, username, password_hash, password_plain, salt, role, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (admin_id, "admin_refinery", pwd_hash, password, salt, 'admin', company_id)
+        )
+        print("Demo credentials 'admin_refinery' auto-seeded successfully.")
+    
     conn.commit()
     conn.close()
     print("Database schema initialized successfully.")
