@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: '', // Proxied automatically via Vite server config
+  baseURL: (import.meta.env.VITE_API_URL as string) || '', // Support VITE_API_URL in production, fallback to relative proxied path
 });
 
 // Automatically inject JWT session token into requests
