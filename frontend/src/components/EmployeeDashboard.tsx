@@ -322,23 +322,23 @@ export const EmployeeDashboard: React.FC = () => {
             <div className="flex flex-col justify-center">
               <div className="flex items-center gap-2">
                 <span className="font-extrabold text-sm font-display text-stone-950">VigilOps</span>
-                <span className="bg-lime-400 text-slate-950 font-mono text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                <span className="hidden sm:inline-block bg-lime-400 text-slate-950 font-mono text-[9px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                   OPERATIONS MATRIX
                 </span>
               </div>
-              <p className="text-[9px] font-mono text-stone-600 flex items-center gap-1 mt-0.5">
+              <p className="text-[9px] font-mono text-stone-600 flex items-center gap-1 mt-0.5 max-w-[150px] truncate">
                 <Building2 size={10} /> Refinery: <span className="font-bold text-stone-900">{companyId}</span>
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-stone-300 text-stone-900 border border-stone-400">
+          <div className="flex items-center gap-2 sm:gap-4">
+            <span className="hidden md:inline-block text-[10px] font-mono font-bold uppercase tracking-wider px-3.5 py-1 rounded-full bg-stone-300 text-stone-900 border border-stone-400">
               EMPLOYEE ACCESS
             </span>
             <button
               onClick={logout}
-              className="px-4 py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 text-xs font-mono font-extrabold flex items-center gap-1 transition-all active:scale-95 uppercase tracking-wider"
+              className="px-3 py-1.5 sm:px-4 sm:py-1.5 rounded-full bg-red-500/10 hover:bg-red-500/20 text-red-600 border border-red-500/30 text-[10px] sm:text-xs font-mono font-extrabold flex items-center gap-1 transition-all active:scale-95 uppercase tracking-wider"
             >
               <LogOut size={12} /> Log Out
             </button>
@@ -347,9 +347,9 @@ export const EmployeeDashboard: React.FC = () => {
       </div>
 
       {/* Workspace Layout */}
-      <div className="flex-1 flex overflow-hidden min-h-0 p-4 gap-4">
+      <div className="flex-1 flex flex-col lg:flex-row overflow-hidden min-h-0 p-4 gap-4">
         {/* Left Sidebar */}
-        <aside className={`rounded-3xl border border-stone-300/40 liquid-glass flex-col flex-shrink-0 shadow-2xl overflow-hidden ${mobileTab === 'sidebar' ? 'flex w-full h-full' : 'hidden xl:flex w-64 h-full'}`}>
+        <aside className={`rounded-3xl border border-stone-300/40 liquid-glass flex-col flex-shrink-0 shadow-2xl overflow-hidden ${mobileTab === 'sidebar' ? 'flex w-full h-full' : 'hidden lg:flex w-64 h-full'}`}>
           {/* Document Library (Top half) */}
           <div className="h-[50%] flex flex-col min-h-0 border-b border-stone-300">
             <div className="p-4 border-b border-stone-300 flex items-center justify-between">
@@ -448,7 +448,7 @@ export const EmployeeDashboard: React.FC = () => {
         </aside>
 
         {/* Split Screen Main */}
-        <main className="flex-1 flex overflow-hidden gap-4 min-h-0">
+        <main className={`flex-1 overflow-hidden gap-4 min-h-0 ${mobileTab === 'sidebar' ? 'hidden lg:flex' : 'flex'}`}>
           <div className={`flex-col gap-2.5 h-full min-h-0 rounded-3xl border border-stone-300/40 liquid-glass p-4 shadow-2xl ${mobileTab === 'matrix' ? 'flex w-full' : 'hidden lg:flex lg:flex-1'}`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 bg-stone-300/60 p-1 rounded-full border border-stone-350">
@@ -776,7 +776,7 @@ export const EmployeeDashboard: React.FC = () => {
         </main>
 
         {/* Mobile/Tablet Bottom Navigation Bar */}
-        <div className="lg:hidden flex-shrink-0 p-3 bg-white border-t border-stone-300 flex items-center justify-around z-40">
+        <div className="lg:hidden flex-shrink-0 p-3 bg-[#e8e8e5]/90 backdrop-blur-2xl border-t border-stone-300 flex items-center justify-around z-40">
           <button
             type="button"
             onClick={() => setMobileTab('sidebar')}
